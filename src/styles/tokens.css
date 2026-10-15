@@ -1,0 +1,76 @@
+/**
+ * The single source of truth for design values. Every other stylesheet
+ * must reference these via var(--token) and never hardcode a color,
+ * spacing, radius, font, or shadow value itself.
+ */
+:root {
+  /* Color: surfaces */
+  --color-bg: #ffffff;
+  --color-surface: #f6f7f9;
+  --color-surface-hover: #eceef1;
+  --color-surface-selected: #e3edff;
+  --color-border: #dde1e6;
+
+  /* Color: text */
+  --color-text: #1b1f24;
+  --color-text-muted: #5b6370;
+  --color-text-subtle: #8a93a1;
+
+  /* Color: accent / feedback */
+  --color-accent: #2563eb;
+  --color-accent-text: #ffffff;
+  --color-danger: #c62828;
+
+  /* Typography */
+  --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-family-mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 0.9375rem;
+  --font-size-lg: 1.125rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 600;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Shape */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --border-width: 1px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+
+  /* Layout */
+  --tree-width: 320px;
+  --row-height: 28px;
+
+  /* Motion */
+  --transition-fast: 120ms ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1b1f24;
+    --color-surface: #22262c;
+    --color-surface-hover: #2b3038;
+    --color-surface-selected: #26405f;
+    --color-border: #343a42;
+
+    --color-text: #e7e9ec;
+    --color-text-muted: #a7afbb;
+    --color-text-subtle: #767f8c;
+
+    --color-accent: #5b8def;
+    --color-accent-text: #0b1220;
+    --color-danger: #ef6464;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+}

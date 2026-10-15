@@ -1,0 +1,23 @@
+.folder-picker__button {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.folder-picker__button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.folder-picker__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.folder-picker__input {
+  display: none;
+}
