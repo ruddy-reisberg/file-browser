@@ -1,11 +1,15 @@
 {
   "mcpServers": {
+    "codebase-memory": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "codebase-memory-mcp"
+      ]
+    },
     "context7": {
       "type": "http",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": {
-        "Authorization": "Bearer ctx7sk-15bdd5f8-5402-48cc-bd76-4da171074076"
-      }
+      "url": "https://mcp.context7.com/mcp/oauth"
     }
   }
 }
