@@ -1,0 +1,192 @@
+.leaf-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  background: var(--overlay-backdrop);
+  backdrop-filter: blur(3px);
+  animation: leaf-fade-in 300ms ease both;
+}
+
+.leaf-overlay--closing {
+  animation: leaf-fade-out 260ms ease both;
+}
+
+/* Unfurl: the leaf grows from the branch tip, spinning slightly, with a springy overshoot. */
+.leaf {
+  position: relative;
+  width: var(--leaf-width);
+  max-height: 100%;
+  display: flex;
+  transform-origin: 100% 100%;
+  animation: leaf-unfurl var(--duration-leaf-unfurl) var(--ease-spring) both;
+}
+
+.leaf--closing {
+  animation: leaf-fold 260ms ease-in both;
+}
+
+/* Idle: a slow sway around the stem, once the leaf has unfurled. */
+.leaf__sway {
+  position: relative;
+  width: 100%;
+  max-height: 100%;
+  display: flex;
+  transform-origin: 100% 100%;
+  animation: leaf-sway var(--duration-leaf-sway) ease-in-out var(--duration-leaf-unfurl) infinite alternate;
+}
+
+.leaf__blade {
+  position: relative;
+  width: 100%;
+  max-height: var(--leaf-max-height);
+  display: flex;
+  padding: var(--space-5);
+  /* Pointed tip top-left, stem corner bottom-right, round belly in between. */
+  border-radius: var(--radius-sm) 38% var(--radius-sm) 38% / var(--radius-sm) 24% var(--radius-sm) 24%;
+  border: var(--border-width) solid var(--leaf-edge);
+  box-shadow: var(--shadow-lg);
+  background:
+    /* Midrib running from the tip to the stem. */
+    linear-gradient(135deg, transparent calc(50% - 1px), var(--leaf-vein) 50%, transparent calc(50% + 1px)),
+    /* Side veins. */
+    repeating-linear-gradient(135deg, transparent 0 22px, var(--leaf-vein) 22px 23px),
+    linear-gradient(135deg, var(--leaf-light), var(--leaf-dark));
+  background-size: 100% 100%, 100% 100%, 100% 100%;
+  overflow: hidden;
+}
+
+/* A slow highlight sweeping across the blade, like light through a leaf. */
+.leaf__blade::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, var(--leaf-vein) 50%, transparent 65%);
+  background-size: 250% 100%;
+  animation: leaf-shimmer 5s ease-in-out var(--duration-leaf-unfurl) infinite;
+}
+
+.leaf__stem {
+  position: absolute;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  width: calc(var(--space-6) * 2);
+  height: var(--space-1);
+  background: var(--leaf-stem);
+  border-radius: var(--radius-sm);
+  transform: rotate(45deg);
+  transform-origin: 0 50%;
+  box-shadow: var(--shadow-sm);
+}
+
+.leaf__paper {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+  /* Keep text clear of the rounded belly corners. */
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--leaf-paper);
+  color: var(--color-text);
+}
+
+.leaf__paper .detail-pane {
+  padding: 0;
+  overflow: visible;
+}
+
+.leaf__close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-4);
+  z-index: 2;
+  width: var(--space-6);
+  height: var(--space-6);
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--leaf-paper);
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.leaf__close:hover,
+.leaf__close:focus-visible {
+  transform: scale(1.12) rotate(90deg);
+}
+
+@keyframes leaf-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes leaf-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes leaf-unfurl {
+  0% {
+    opacity: 0;
+    transform: translate(18vw, 22vh) scale(0.12) rotate(-70deg);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes leaf-fold {
+  to {
+    opacity: 0;
+    transform: translate(10vw, 14vh) scale(0.2) rotate(30deg);
+  }
+}
+
+@keyframes leaf-sway {
+  from {
+    transform: rotate(-0.9deg) translateY(0);
+  }
+  to {
+    transform: rotate(0.9deg) translateY(calc(var(--space-1) * -1));
+  }
+}
+
+@keyframes leaf-shimmer {
+  0%,
+  35% {
+    background-position: 130% 0;
+  }
+  100% {
+    background-position: -30% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leaf,
+  .leaf--closing,
+  .leaf__sway,
+  .leaf__blade::after {
+    animation: none;
+  }
+
+  .leaf-overlay,
+  .leaf-overlay--closing {
+    animation-duration: 1ms;
+  }
+}

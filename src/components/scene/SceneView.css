@@ -1,0 +1,241 @@
+.scene {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: linear-gradient(to bottom, var(--scene-sky-top), var(--scene-sky-bottom));
+}
+
+.scene__stage {
+  position: absolute;
+  inset: 0;
+  /* The scene handles drag and wheel itself. */
+  touch-action: none;
+  outline: none;
+}
+
+.scene__stage:focus-visible {
+  box-shadow: inset 0 0 0 var(--space-1) var(--color-accent);
+}
+
+/* ---- HUD ------------------------------------------------------------- */
+
+.scene__hud {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  right: var(--space-4);
+  z-index: var(--z-hud);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  pointer-events: none;
+}
+
+.scene__crumbs,
+.scene__back,
+.scene__hint,
+.scene__empty {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(6px);
+}
+
+.scene__crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  pointer-events: auto;
+}
+
+.scene__crumb {
+  display: inline-flex;
+  align-items: center;
+}
+
+.scene__crumb-sep {
+  margin: 0 var(--space-2);
+  color: var(--color-text-subtle);
+}
+
+.scene__crumb-current {
+  font-weight: var(--font-weight-bold);
+}
+
+.scene__crumb-button {
+  padding: var(--space-1);
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  cursor: pointer;
+}
+
+.scene__crumb-button:hover {
+  text-decoration: underline;
+}
+
+.scene__back {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background var(--transition-fast);
+}
+
+.scene__back:hover {
+  background: var(--color-surface-hover);
+}
+
+.scene__hint {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-4);
+  z-index: var(--z-hud);
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  transform: translateX(-50%);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.scene__hint:empty {
+  display: none;
+}
+
+.scene__empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: var(--z-hud);
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-md);
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ---- Keyboard / screen-reader list ------------------------------------ */
+
+.scene__list {
+  position: absolute;
+  top: var(--space-6);
+  right: var(--space-4);
+  z-index: var(--z-hud);
+  max-height: 60%;
+  overflow-y: auto;
+  /* Hidden until something inside has focus. */
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+}
+
+.scene__list:focus-within {
+  clip-path: none;
+  width: auto;
+  height: auto;
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.scene__list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scene__list button {
+  width: 100%;
+  padding: var(--space-1) var(--space-3);
+  border: none;
+  background: none;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.scene__list button:focus-visible {
+  background: var(--color-surface-selected);
+  outline: none;
+}
+
+/* ---- Labels floating in the 3D scene (drei <Html>) --------------------- */
+
+.scene-label {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.scene-label--tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: scene-label-in 400ms var(--ease-spring) both;
+}
+
+.scene-label__name {
+  font-weight: var(--font-weight-bold);
+}
+
+.scene-label__meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.scene-label--branch {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-family-mono);
+}
+
+.scene-label--folder {
+  font-weight: var(--font-weight-bold);
+}
+
+.scene-label--hover {
+  transform: scale(1.12);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.scene-label--hover .scene-label__meta {
+  color: inherit;
+}
+
+@keyframes scene-label-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2)) scale(0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-label--tree {
+    animation: none;
+  }
+}

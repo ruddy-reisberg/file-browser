@@ -1,3 +1,5 @@
+import '@testing-library/jest-dom/vitest'
+
 // jsdom's File/Blob implementation lags behind the spec in some versions;
 // patch in arrayBuffer() when missing so lib code can rely on the real API.
 if (typeof Blob !== 'undefined' && !Blob.prototype.arrayBuffer) {

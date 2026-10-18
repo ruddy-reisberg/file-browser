@@ -46,13 +46,53 @@
 
   /* Elevation */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.35);
 
   /* Layout */
   --tree-width: 320px;
   --row-height: 28px;
+  --leaf-width: min(92vw, 34rem);
+  --leaf-max-height: 86vh;
 
   /* Motion */
   --transition-fast: 120ms ease;
+  --duration-leaf-unfurl: 700ms;
+  --duration-leaf-sway: 6s;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Stacking */
+  --z-hud: 10;
+  --z-modal: 100;
+
+  /* 3D scene: read from JS (see useSceneTheme), so values must be hex colors or plain numbers */
+  --scene-sky-top: #6cb8f0;
+  --scene-sky-bottom: #fdf0d2;
+  --scene-grass: #72c15f;
+  --scene-grass-dark: #4e9a4a;
+  --scene-soil: #8d6b4a;
+  --scene-rock: #8a8580;
+  --scene-trunk: #80552f;
+  --scene-branch: #94653b;
+  --scene-foliage: #3fa66b;
+  --scene-foliage-alt: #6cc77c;
+  --scene-cloud: #ffffff;
+  --scene-sparkle: #fff3b0;
+  --scene-flower: #f08fb0;
+  --scene-leaf-image: #f4a53d;
+  --scene-leaf-pdf: #ee6b66;
+  --scene-leaf-other: #86d46c;
+  --scene-leaf-folder: #3c9a62;
+  --scene-ambient: 1;
+  --scene-sun: 2.2;
+
+  /* Leaf modal (file metadata card) */
+  --leaf-edge: #2f8a4f;
+  --leaf-light: #9edb7a;
+  --leaf-dark: #3f9d5c;
+  --leaf-vein: rgba(255, 255, 255, 0.45);
+  --leaf-paper: rgba(255, 255, 255, 0.9);
+  --leaf-stem: #6b8e3a;
+  --overlay-backdrop: rgba(10, 20, 35, 0.45);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -72,5 +112,34 @@
     --color-danger: #ef6464;
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
+
+    --scene-sky-top: #0a1230;
+    --scene-sky-bottom: #3b2a5e;
+    --scene-grass: #3f9560;
+    --scene-grass-dark: #2c7248;
+    --scene-soil: #54402f;
+    --scene-rock: #5d5b66;
+    --scene-trunk: #5d3d27;
+    --scene-branch: #6e4a2e;
+    --scene-foliage: #2b8a63;
+    --scene-foliage-alt: #3fae7e;
+    --scene-cloud: #8e86b8;
+    --scene-sparkle: #ffe9a0;
+    --scene-flower: #d77fa0;
+    --scene-leaf-image: #ffb454;
+    --scene-leaf-pdf: #ff7f7a;
+    --scene-leaf-other: #7be08c;
+    --scene-leaf-folder: #3fc08a;
+    --scene-ambient: 0.55;
+    --scene-sun: 1.1;
+
+    --leaf-edge: #1f6d44;
+    --leaf-light: #5fb878;
+    --leaf-dark: #1f7a50;
+    --leaf-vein: rgba(255, 255, 255, 0.3);
+    --leaf-paper: rgba(27, 31, 36, 0.9);
+    --leaf-stem: #4d7a30;
+    --overlay-backdrop: rgba(0, 0, 0, 0.6);
   }
 }

@@ -12,6 +12,43 @@
   border-bottom: var(--border-width) solid var(--color-border);
 }
 
+.app__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.app__views {
+  display: flex;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.app__view-button {
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.app__view-button:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+
+.app__view-button[aria-pressed='true'] {
+  background: var(--color-surface-selected);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+.app__view-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .app__title {
   margin: 0;
   font-size: var(--font-size-lg);
@@ -38,6 +75,12 @@
   overflow-y: auto;
   padding: var(--space-3);
   border-right: var(--border-width) solid var(--color-border);
+}
+
+.app__scene {
+  flex: 1;
+  min-width: 0;
+  position: relative;
 }
 
 .app__placeholder {
