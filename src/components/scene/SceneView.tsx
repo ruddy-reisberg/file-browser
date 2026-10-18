@@ -7,6 +7,7 @@ import {
   rotationToFace,
   shapeTree,
 } from '../../lib/scene-layout'
+import { countFiles, filterTree } from '../../lib/filter'
 import type { TreeNode } from '../../lib/types'
 import { prefersReducedMotion } from '../../lib/webgl'
 import DetailPane from '../DetailPane'
@@ -46,10 +47,13 @@ export default function SceneView({ root, onSelect, emptyMessage }: SceneViewPro
   const [stack, setStack] = useState<TreeNode[]>([root])
   const [activeTreeId, setActiveTreeId] = useState<string | null>(null)
   const [openNode, setOpenNode] = useState<TreeNode | null>(null)
+  const [query, setQuery] = useState('')
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null)
 
   const current = stack[stack.length - 1]
-  const trees = useMemo(() => buildIslandTrees(current), [current])
+  const visible = useMemo(() => filterTree(current, query), [current, query])
+  const matchCount = useMemo(() => (query.trim() === '' ? 0 : countFiles(visible)), [visible, query])
+  const trees = useMemo(() => buildIslandTrees(visible), [visible])
   const activeTree = trees.find((tree) => tree.id === activeTreeId) ?? null
 
   const levelsOf = useCallback((id: string | null) => {
@@ -80,6 +84,15 @@ export default function SceneView({ root, onSelect, emptyMessage }: SceneViewPro
   )
 
   const exitTree = useCallback(() => setActive(null), [setActive])
+
+  // Filtering rebuilds the trees, so a tree being climbed may vanish: come back down first.
+  const changeQuery = useCallback(
+    (next: string) => {
+      setActive(null)
+      setQuery(next)
+    },
+    [setActive],
+  )
 
   const enterFolder = useCallback(
     (node: TreeNode) => {
@@ -207,6 +220,9 @@ export default function SceneView({ root, onSelect, emptyMessage }: SceneViewPro
           activeTreeId={activeTreeId}
           onSelectTree={selectTree}
           onPickBranch={pickBranch}
+          query={query}
+          onQueryChange={changeQuery}
+          matchCount={matchCount}
         />
       </div>
 
@@ -244,7 +260,7 @@ export default function SceneView({ root, onSelect, emptyMessage }: SceneViewPro
 
       {isEmpty && (
         <p className="scene__empty">
-          {emptyMessage ?? 'This folder has nothing in it yet.'}
+          {query.trim() !== '' ? 'No file or folder matches this filter.' : (emptyMessage ?? 'This folder has nothing in it yet.')}
         </p>
       )}
 

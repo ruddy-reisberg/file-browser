@@ -5,6 +5,7 @@ import { islandRadius, type TreeSpec } from '../../lib/scene-layout'
 import type { TreeNode } from '../../lib/types'
 import Atmosphere from './Atmosphere'
 import CameraRig from './CameraRig'
+import FilterSign from './FilterSign'
 import Island from './Island'
 import { SceneStateContext, type SceneState } from './scene-state'
 import { useSceneTheme } from './useSceneTheme'
@@ -16,10 +17,23 @@ interface SceneCanvasProps {
   activeTreeId: string | null
   onSelectTree: (id: string) => void
   onPickBranch: (node: TreeNode) => void
+  query: string
+  onQueryChange: (query: string) => void
+  matchCount: number
 }
 
 /** The WebGL layer. Pure rendering: all input arrives through `stateRef` and the callbacks. */
-export default function SceneCanvas({ dir, trees, stateRef, activeTreeId, onSelectTree, onPickBranch }: SceneCanvasProps) {
+export default function SceneCanvas({
+  dir,
+  trees,
+  stateRef,
+  activeTreeId,
+  onSelectTree,
+  onPickBranch,
+  query,
+  onQueryChange,
+  matchCount,
+}: SceneCanvasProps) {
   const theme = useSceneTheme()
   const radius = islandRadius(trees.length)
 
@@ -44,6 +58,7 @@ export default function SceneCanvas({ dir, trees, stateRef, activeTreeId, onSele
         />
         <Atmosphere theme={theme} radius={radius} />
         <CameraRig />
+        <FilterSign theme={theme} query={query} onQueryChange={onQueryChange} matchCount={matchCount} />
       </SceneStateContext.Provider>
     </Canvas>
   )

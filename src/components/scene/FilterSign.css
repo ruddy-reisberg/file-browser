@@ -1,0 +1,38 @@
+.filter-sign {
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  color: var(--sign-text);
+  font-family: var(--font-family);
+  user-select: none;
+}
+
+.filter-sign__label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--sign-text);
+}
+
+.filter-sign__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-base);
+  user-select: text;
+}
+
+.filter-sign__input:focus-visible {
+  outline: 2px solid var(--color-accent);
+}
+
+.filter-sign__count {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--sign-text);
+}

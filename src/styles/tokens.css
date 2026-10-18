@@ -93,6 +93,9 @@
   --leaf-paper: rgba(255, 255, 255, 0.9);
   --leaf-stem: #6b8e3a;
   --overlay-backdrop: rgba(10, 20, 35, 0.45);
+
+  /* Filter signpost (text on the wooden board) */
+  --sign-text: #fff6e0;
 }
 
 @media (prefers-color-scheme: dark) {
