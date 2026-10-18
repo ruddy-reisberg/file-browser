@@ -9,6 +9,10 @@ export function isImageFile(file: File): boolean {
   return IMAGE_EXTENSIONS.has(file.name.slice(dot + 1).toLowerCase())
 }
 
+export function isPdfFile(file: File): boolean {
+  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+}
+
 /** Reads natural pixel dimensions by loading the file into an <img>. */
 export function readImageDimensions(file: File): Promise<ImageDimensions> {
   return new Promise((resolve, reject) => {

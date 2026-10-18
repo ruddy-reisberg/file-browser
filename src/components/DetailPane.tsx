@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getFileMetadata } from '../lib/metadata'
-import { isImageFile, parseExif, readImageDimensions } from '../lib/image'
+import { isImageFile, isPdfFile, parseExif, readImageDimensions } from '../lib/image'
 import type { ExifData, ImageDimensions, TreeNode } from '../lib/types'
 import ImagePreview from './ImagePreview'
 import './DetailPane.css'
@@ -27,6 +27,8 @@ export default function DetailPane({ node }: Props) {
 
   const file = node?.kind === 'file' ? node.file ?? null : null
   const isImage = file ? isImageFile(file) : false
+
+  const isPdf = file ? isPdfFile(file) : false
 
   useEffect(() => {
     setDimensions(null)
@@ -88,6 +90,8 @@ export default function DetailPane({ node }: Props) {
       {isImage && imageError && <p className="detail-pane__error">{imageError}</p>}
 
       {isImage && !imageError && <ImagePreview file={node.file!} />}
+
+      {isPdf && <ImagePreview file={node.file!} />}
 
       {exifEntries.length > 0 && (
         <>
