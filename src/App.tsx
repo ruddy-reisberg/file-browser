@@ -1,9 +1,11 @@
-import { Suspense, lazy, useState } from 'react'
+import { Suspense, lazy, useMemo, useState } from 'react'
 import { buildTree } from './lib/tree'
+import { countFiles, filterTree } from './lib/filter'
 import { supportsWebGL } from './lib/webgl'
 import type { FileEntry, TreeNode } from './lib/types'
 import FolderPicker from './components/FolderPicker'
 import Tree from './components/Tree'
+import ListFilter from './components/ListFilter'
 import DetailPane from './components/DetailPane'
 import SceneErrorBoundary from './components/SceneErrorBoundary'
 import './App.css'
@@ -19,6 +21,8 @@ const EMPTY_ROOT: TreeNode = { name: '', kind: 'dir', path: '', children: [] }
 export default function App() {
   const [root, setRoot] = useState<TreeNode | null>(null)
   const [selected, setSelected] = useState<TreeNode | null>(null)
+  // Owned here so the list view and the 3D sign filter the same tree.
+  const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [webglAvailable] = useState(supportsWebGL)
   const [viewMode, setViewMode] = useState<ViewMode>(webglAvailable ? 'scene' : 'list')
@@ -30,8 +34,15 @@ export default function App() {
     const tree = buildTree(rootName, entries)
     setRoot(tree)
     setSelected(null)
+    setQuery('')
     setPickCount((count) => count + 1)
   }
+
+  const visibleRoot = useMemo(() => (root ? filterTree(root, query) : null), [root, query])
+  const matchCount = useMemo(
+    () => (visibleRoot && query.trim() !== '' ? countFiles(visibleRoot) : 0),
+    [visibleRoot, query],
+  )
 
   function handleSceneFailure(message: string) {
     setError(`The 3D view is unavailable (${message}). Showing the list view instead.`)
@@ -78,6 +89,8 @@ export default function App() {
                   key={pickCount}
                   root={root ?? EMPTY_ROOT}
                   onSelect={setSelected}
+                  query={query}
+                  onQueryChange={setQuery}
                   emptyMessage={root ? undefined : 'Choose a folder to grow your first trees.'}
                 />
               </Suspense>
@@ -87,8 +100,15 @@ export default function App() {
       ) : (
         <main className="app__main">
           <section className="app__tree" aria-label="Folder tree">
-            {root ? (
-              <Tree root={root} selectedPath={selected?.path ?? null} onSelect={setSelected} />
+            {root && visibleRoot ? (
+              <>
+                <ListFilter query={query} onQueryChange={setQuery} matchCount={matchCount} />
+                {(visibleRoot.children?.length ?? 0) === 0 && query.trim() !== '' ? (
+                  <p className="app__placeholder">No file or folder matches this filter.</p>
+                ) : (
+                  <Tree root={visibleRoot} selectedPath={selected?.path ?? null} onSelect={setSelected} />
+                )}
+              </>
             ) : (
               <p className="app__placeholder">No folder chosen yet.</p>
             )}

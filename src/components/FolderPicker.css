@@ -18,6 +18,8 @@
   cursor: default;
 }
 
-.folder-picker__input {
-  display: none;
+.folder-picker__unsupported {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
 }

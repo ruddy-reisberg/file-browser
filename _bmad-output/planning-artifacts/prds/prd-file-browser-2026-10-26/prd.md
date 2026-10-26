@@ -48,7 +48,7 @@ Other end users, and anyone on Firefox or Safari (no File System Access API; the
 
 ### 4.1 Folder access
 
-**Description:** The user picks a folder through `showDirectoryPicker({ mode: 'read' })`. On unsupported browsers, an explicit message replaces the picker. `[ASSUMPTION: the message alone is enough; no webkitdirectory fallback in v1.]`
+**Description:** The user picks a folder through `showDirectoryPicker({ mode: 'read' })`. On unsupported browsers, an explicit message replaces the picker. Decided: the message alone is enough, and no `webkitdirectory` fallback exists (it was removed from the code).
 
 #### FR-1: Pick a folder
 The user can pick a local folder; the app reads it without any write access. Realizes UJ-1.
@@ -93,6 +93,7 @@ The user can filter files by name through a sign fixed on the right of the 3D vi
 **Consequences (testable):**
 - Only matching files remain visible; clearing the filter restores them.
 - Filter logic is pure and lives in `src/lib/`.
+- The query is owned by `App`; the 3D sign and the list view's filter input edit the same query, and a new pick clears it.
 
 ### 4.3 File inspection
 
@@ -127,7 +128,7 @@ WHILE an audio or video file is playing, the system shall display play/pause, se
 
 **Consequences (testable):**
 - Each control is present and operable by keyboard.
-- The media URL is revoked when playback ends or the selection changes.
+- The media URL is revoked when the selection changes or the player unmounts. It is kept when playback ends so the user can replay.
 
 #### FR-11: Stop and error handling
 WHILE the user navigates between folders, IF the selected media is no longer available or cannot be played, THEN the system shall stop playback, reset the player state and display an explicit error message when playback fails.
@@ -149,7 +150,7 @@ WHILE the user navigates between folders, IF the selected media is no longer ava
 Folder picker, list tree, 3D tree, name filter, metadata, image preview with EXIF, PDF rendering, one tree per sub-folder, audio/video mini-player.
 
 ### 6.2 Out of Scope for MVP
-- Non-Chromium support. Revisit if the fallback question is settled in favor of `webkitdirectory`.
+- Non-Chromium support. Decided out: no `webkitdirectory` fallback.
 - Previews for text and other file types, until the preview question is settled.
 - A 3D scale cap or virtualization, until measured.
 
@@ -173,13 +174,12 @@ Folder picker, list tree, 3D tree, name filter, metadata, image preview with EXI
 ## 9. Open Questions and Assumptions
 
 **Open questions**
-1. Is the "unsupported" message enough for Firefox and Safari, or should a read-only `webkitdirectory` fallback be added?
+1. (Resolved: the "unsupported" message is enough; no `webkitdirectory` fallback.)
 2. How does the 3D layout behave with tens of thousands of files? Does it need a cap or virtualization?
 3. Which file types besides images, PDFs, audio and video deserve a preview?
 4. What does the 3D view give over the list? `[ASSUMPTION]` Working answer: it is the course's challenge and shows structure at a glance. The author should confirm.
 
 **Assumptions index**
-- §4.1: the unsupported message is enough; no fallback in v1.
 - §4.2 FR-2: files directly in the chosen folder appear in a root group.
 - §3 Glossary: the mini-player lives in the detail pane.
 - §9.4: the rationale for the 3D view.

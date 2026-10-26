@@ -28,6 +28,9 @@ interface SceneViewProps {
   root: TreeNode
   /** Mirrors what the user picks to the rest of the app. */
   onSelect: (node: TreeNode) => void
+  /** Name filter, owned by App so the list view shares it. */
+  query: string
+  onQueryChange: (query: string) => void
   emptyMessage?: string
 }
 
@@ -42,12 +45,11 @@ function wheelPixels(event: WheelEvent): number {
  * tree's entries are Branches, and a file's metadata opens as a Leaf.
  * This component is the DOM layer: navigation state, input, HUD and the Leaf.
  */
-export default function SceneView({ root, onSelect, emptyMessage }: SceneViewProps) {
+export default function SceneView({ root, onSelect, query, onQueryChange, emptyMessage }: SceneViewProps) {
   const [stateRef] = useState<{ current: SceneState }>(() => ({ current: createSceneState(prefersReducedMotion()) }))
   const [stack, setStack] = useState<TreeNode[]>([root])
   const [activeTreeId, setActiveTreeId] = useState<string | null>(null)
   const [openNode, setOpenNode] = useState<TreeNode | null>(null)
-  const [query, setQuery] = useState('')
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null)
 
   const current = stack[stack.length - 1]
@@ -89,9 +91,9 @@ export default function SceneView({ root, onSelect, emptyMessage }: SceneViewPro
   const changeQuery = useCallback(
     (next: string) => {
       setActive(null)
-      setQuery(next)
+      onQueryChange(next)
     },
-    [setActive],
+    [setActive, onQueryChange],
   )
 
   const enterFolder = useCallback(

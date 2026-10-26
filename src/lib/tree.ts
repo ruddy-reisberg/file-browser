@@ -52,18 +52,6 @@ function sortTree(node: TreeNode): void {
   for (const child of node.children) sortTree(child)
 }
 
-/** Convert a FileList from an <input webkitdirectory> into flat FileEntry[]. */
-export function fileListToEntries(fileList: FileList): FileEntry[] {
-  const entries: FileEntry[] = []
-  for (let i = 0; i < fileList.length; i++) {
-    const file = fileList[i]
-    const relPath = (file as File & { webkitRelativePath?: string }).webkitRelativePath
-    const segments = relPath ? relPath.split('/').slice(1) : [file.name]
-    entries.push({ path: segments, file })
-  }
-  return entries
-}
-
 /**
  * Recursively walk a FileSystemDirectoryHandle (File System Access API)
  * and collect flat FileEntry[] with paths relative to that handle.

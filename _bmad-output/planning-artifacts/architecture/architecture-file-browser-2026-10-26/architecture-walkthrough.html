@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>file-browser architecture walkthrough</title>
+<style>
+  :root {
+    --bg: #ffffff; --surface: #f6f7f9; --border: #dde1e6;
+    --text: #1b1f24; --muted: #5b6370; --accent: #2563eb; --ok: #2e7d32;
+    --mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1b1f24; --surface: #22262c; --border: #343a42; --text: #e7e9ec; --muted: #a7afbb; --accent: #5b8def; --ok: #7bc47f; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+  main { max-width: 56rem; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.75rem; margin: 0 0 4px; }
+  h2 { font-size: 1.25rem; margin: 40px 0 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+  p, li { max-width: 46rem; }
+  .lede { color: var(--muted); margin: 0 0 24px; }
+  code { font-family: var(--mono); font-size: 0.875em; background: var(--surface); padding: 1px 5px; border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8125rem; }
+  .tablewrap { overflow-x: auto; }
+  .tag { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+  .tag.adopted { color: var(--ok); border-color: var(--ok); }
+  .tag.new { color: var(--accent); border-color: var(--accent); }
+  .steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .steps li { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+  .steps b { display: block; }
+  figure { margin: 16px 0; }
+  svg { width: 100%; height: auto; max-width: 44rem; }
+  svg text { fill: var(--text); font: 13px system-ui, sans-serif; }
+  svg .box { fill: var(--surface); stroke: var(--border); }
+  svg .core { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+  svg .arrow { stroke: var(--muted); fill: none; stroke-width: 1.5; }
+  svg .never { stroke: var(--muted); stroke-dasharray: 4 4; fill: none; stroke-width: 1.5; }
+  figcaption { color: var(--muted); font-size: 0.875rem; }
+  details { border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; margin: 8px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>file-browser: architecture walkthrough</h1>
+  <p class="lede">For the course grader. How the rules in <code>CLAUDE.md</code> became eight architecture decisions, what the review changed, and what the author decided. The contract itself is <code>ARCHITECTURE-SPINE.md</code> in this folder.</p>
+
+  <h2>1. The process</h2>
+  <ol class="steps">
+    <li><b>Brief → PRD</b>Product brief, then a PRD with FR-1 to FR-11, including the audio/video mini-player (FR-9 to FR-11) from <code>prompts/level-4/ears.md</code>.</li>
+    <li><b>Architecture spine (fast path)</b>Drafted from the PRD and a read of the real code. Each decision is logged in <code>.memlog.md</code> before it reaches the spine.</li>
+    <li><b>Three independent reviewers</b>A rubric walker, a version and fit checker, and an adversary who tried to build incompatible units that still obey every rule. Reports are in <code>reviews/</code>.</li>
+    <li><b>Author decisions</b>Four questions answered; two changed the code, all changed the docs. <code>npm run check</code> stayed green (typecheck, lint, 69 tests).</li>
+  </ol>
+
+  <h2>2. The paradigm: functional core, imperative shell</h2>
+  <figure>
+    <svg viewBox="0 0 640 250" role="img" aria-label="Dependency direction: App and components depend on src/lib; src/lib never depends on React or components">
+      <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--muted)"/></marker></defs>
+      <rect class="box" x="20" y="20" width="170" height="50" rx="8"/><text x="105" y="50" text-anchor="middle">App.tsx (state owner)</text>
+      <rect class="box" x="235" y="20" width="170" height="50" rx="8"/><text x="320" y="50" text-anchor="middle">components/*</text>
+      <rect class="box" x="450" y="20" width="170" height="50" rx="8"/><text x="535" y="50" text-anchor="middle">components/scene/* (lazy)</text>
+      <rect class="core" x="170" y="150" width="300" height="60" rx="8"/><text x="320" y="176" text-anchor="middle">src/lib/* (pure core)</text><text x="320" y="196" text-anchor="middle">tree · filter · metadata · file-kind · layout</text>
+      <path class="arrow" d="M105 70 L260 150" marker-end="url(#a)"/>
+      <path class="arrow" d="M320 70 L320 150" marker-end="url(#a)"/>
+      <path class="arrow" d="M535 70 L380 150" marker-end="url(#a)"/>
+      <path class="never" d="M470 190 L560 190"/><text x="565" y="194">never React</text>
+    </svg>
+    <figcaption>Arrows are allowed dependencies. The dashed line is the rule ESLint enforces today (<code>no-restricted-imports</code>).</figcaption>
+  </figure>
+
+  <h2>3. The eight decisions and where each shows up</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>AD</th><th>Decision</th><th>Origin</th><th>Evidence in the repo</th></tr></thead>
+    <tbody>
+      <tr><td>AD-1</td><td>The core never knows the shell</td><td><span class="tag adopted">adopted</span></td><td><code>src/lib/CLAUDE.md</code>, ESLint rule, <code>src/lib/__tests__/</code></td></tr>
+      <tr><td>AD-2</td><td>Read-only and offline by construction; no fallback, an explicit "not supported" message</td><td><span class="tag adopted">adopted</span></td><td><code>picker.ts</code> with <code>mode: 'read'</code>; <code>FolderPicker.test.tsx</code></td></tr>
+      <tr><td>AD-3</td><td>One immutable tree per pick; <code>path</code> is identity; folder is a snapshot</td><td><span class="tag adopted">adopted</span></td><td><code>buildTree</code>, <code>filterTree</code> keeps node identity</td></tr>
+      <tr><td>AD-4</td><td>Selection and the filter query each have one owner, <code>App</code></td><td><span class="tag new">changed</span></td><td><code>App.tsx</code>; <code>App.test.tsx</code> (filter shared and cleared on pick)</td></tr>
+      <tr><td>AD-5</td><td>One <code>FileKind</code> classifier; exhaustive per-kind records; MIME/extension precedence</td><td><span class="tag new">new</span></td><td>Not built yet; prerequisite for the mini-player</td></tr>
+      <tr><td>AD-6</td><td>Async resources keyed to a file, released on cleanup, failures shown explicitly</td><td><span class="tag new">new</span></td><td>Image preview follows it; the PDF path swallows errors and is flagged to fix</td></tr>
+      <tr><td>AD-7</td><td>One <code>MediaPlayer</code>, native controls, stops on close request</td><td><span class="tag new">new</span></td><td>Not built yet (FR-9 to FR-11)</td></tr>
+      <tr><td>AD-8</td><td>3D is optional, lazy, and never the only route</td><td><span class="tag adopted">adopted</span></td><td><code>SceneErrorBoundary</code>, DOM nav list in <code>SceneView</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>4. What the reviewers found</h2>
+  <details open><summary>Corrected: the docs misdescribed the code</summary>
+    <p>The code shipped a <code>webkitdirectory</code> fallback while the PRD and <code>CLAUDE.md</code> said there was none. The spine overclaimed lint enforcement: only the React-import ban is mechanical, the rest is review and tests.</p></details>
+  <details><summary>Tightened: gaps two independent builders could fall into</summary>
+    <p>Three separate "kind" vocabularies would each grow audio and video differently. The 3D Leaf unmounts 260 ms after a close request, so audio would keep playing, and its focus trap skips <code>audio</code> and <code>video</code> controls. A second selection owner (<code>openNode</code> in the scene) can disagree with <code>App.selected</code>.</p></details>
+  <details><summary>Open: unverified</summary>
+    <p>Keyboard operability of native media controls is an assumption until checked by hand in current Chrome and Edge. Dependency pins are one or two majors behind npm latest and were kept as adopted.</p></details>
+
+  <h2>5. Decisions made by the author</h2>
+  <ul>
+    <li>Remove the <code>webkitdirectory</code> fallback. Done in code, tests and docs.</li>
+    <li>Lift the filter to <code>App</code>. Done: the 3D sign and a new list-view input share one query.</li>
+    <li>Revoke the media URL on selection change or unmount, not when playback ends, so replay works. Recorded in the PRD (FR-10).</li>
+    <li>Write this walkthrough.</li>
+  </ul>
+
+  <h2>6. Not built yet</h2>
+  <p>The mini-player (<code>MediaPlayer</code>, <code>file-kind.ts</code>) is specified by AD-5 to AD-7 but not implemented. Deferred by design: a 3D size cap, previews for other file types, mechanical lint for the no-network and no-write rules, CI and hosting.</p>
+</main>
+</body>
+</html>

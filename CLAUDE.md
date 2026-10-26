@@ -43,6 +43,5 @@ Browser-only file explorer: pick a local folder, browse it as a tree, see file m
 
 # Open questions
 
-- Firefox/Safari lack the File System Access API: is the explicit "unsupported" message enough, or should a `<input webkitdirectory>` fallback be added (read-only, still no network)?
 - Expected performance on very large trees (tens of thousands of files) in the 3D layout: is a cap or virtualization needed?
 - Which file types besides images and PDFs deserve a preview (text, audio, video)?

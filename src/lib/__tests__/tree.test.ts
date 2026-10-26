@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildTree, fileListToEntries } from '../tree'
+import { buildTree } from '../tree'
 import type { FileEntry } from '../types'
 
 function makeFile(name: string): File {
@@ -42,17 +42,5 @@ describe('buildTree', () => {
   it('ignores entries with empty path', () => {
     const tree = buildTree('root', [{ path: [], file: makeFile('ignored') }])
     expect(tree.children).toEqual([])
-  })
-})
-
-describe('fileListToEntries', () => {
-  it('strips the leading root segment from webkitRelativePath', () => {
-    const file = makeFile('a.ts')
-    Object.defineProperty(file, 'webkitRelativePath', { value: 'root/src/a.ts' })
-    const fileList = { 0: file, length: 1 } as unknown as FileList
-
-    const entries = fileListToEntries(fileList)
-
-    expect(entries).toEqual([{ path: ['src', 'a.ts'], file }])
   })
 })
