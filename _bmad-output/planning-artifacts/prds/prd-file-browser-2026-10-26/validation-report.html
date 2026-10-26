@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<!--
+  PRD Validation Report — skeleton template.
+
+  This file is a starter the synthesis pass fills in directly. There is no
+  substitution engine. The LLM:
+    1. Reads {doc_workspace}/review-rubric.md and every review-{slug}.md from
+       additional reviewers.
+    2. Copies this skeleton.
+    3. Replaces the placeholder content (everything between TEMPLATE markers)
+       with the consolidated review, preserving the structure and CSS.
+    4. Writes the result to {doc_workspace}/validation-report.html.
+    5. Writes a markdown twin to {doc_workspace}/validation-report.md.
+
+  Visual rules the LLM must preserve:
+    - The container width, the color tokens, the typography.
+    - One dimension = one collapsible <section class="dimension">.
+    - Verdict pill uses the verdict-* class matching its judgment.
+    - Severity badge uses the sev-* class matching its level.
+    - Each extra reviewer (adversarial, etc.) gets its own collapsible section
+      below the rubric dimensions.
+    - The footer always shows the artifact paths and timestamp.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PRD Validation: PRD: file-browser</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: #e7e5e4;
+    --text: #1c1917;
+    --muted: #78716c;
+
+    --verdict-strong: #16a34a;
+    --verdict-adequate: #65a30d;
+    --verdict-thin: #d97706;
+    --verdict-broken: #dc2626;
+
+    --sev-low: #64748b;
+    --sev-medium: #ca8a04;
+    --sev-high: #ea580c;
+    --sev-critical: #dc2626;
+
+    --grade-exc: #16a34a;
+    --grade-good: #65a30d;
+    --grade-fair: #d97706;
+    --grade-poor: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  header.report-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .title h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .title .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .grade {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: white;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .grade-excellent { background: var(--grade-exc); }
+  .grade-good { background: var(--grade-good); }
+  .grade-fair { background: var(--grade-fair); }
+  .grade-poor { background: var(--grade-poor); }
+
+  .synthesis {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--muted);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    font-size: 15.5px;
+  }
+  .synthesis p { margin: 0 0 10px; }
+  .synthesis p:last-child { margin-bottom: 0; }
+
+  .dimension-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .dim-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .dim-card .dim-name { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .dim-card .dim-verdict { font-size: 14px; font-weight: 600; }
+
+  section.dimension, section.reviewer-section { margin-bottom: 14px; }
+  section.dimension details, section.reviewer-section details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  section summary {
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  section summary::-webkit-details-marker { display: none; }
+  section summary::before {
+    content: "▸";
+    display: inline-block;
+    color: var(--muted);
+    transition: transform 0.15s ease;
+  }
+  section details[open] summary::before { transform: rotate(90deg); }
+  section summary h2 {
+    display: inline;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    flex: 1;
+  }
+  .verdict-pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: white;
+  }
+  .verdict-strong { background: var(--verdict-strong); }
+  .verdict-adequate { background: var(--verdict-adequate); }
+  .verdict-thin { background: var(--verdict-thin); }
+  .verdict-broken { background: var(--verdict-broken); }
+
+  .dim-body { padding: 4px 20px 18px; }
+  .dim-judgment { color: var(--text); font-size: 14.5px; }
+  .dim-judgment p { margin: 0 0 10px; }
+
+  .findings-list { padding: 0 20px 4px; }
+  article.finding {
+    padding: 14px 0;
+    border-top: 1px solid var(--border);
+  }
+  article.finding:first-child { border-top: none; }
+  article.finding header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .badge {
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+  }
+  .badge-sev-low { background: rgba(100, 116, 139, 0.12); color: var(--sev-low); }
+  .badge-sev-medium { background: rgba(202, 138, 4, 0.14); color: var(--sev-medium); }
+  .badge-sev-high { background: rgba(234, 88, 12, 0.14); color: var(--sev-high); }
+  .badge-sev-critical { background: rgba(220, 38, 38, 0.14); color: var(--sev-critical); }
+  .finding-title { margin: 0; font-size: 15px; font-weight: 500; flex: 1; min-width: 200px; }
+  .finding-location { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; color: var(--muted); }
+  .finding-note, .finding-fix { margin-top: 6px; font-size: 14px; }
+  .finding-fix strong { color: var(--muted); font-weight: 500; }
+
+  .reviewer-source {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  .mechanical {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 24px;
+    font-size: 14px;
+  }
+  .mechanical h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .mechanical ul { margin: 0; padding-left: 20px; }
+  .mechanical li { margin-bottom: 4px; color: var(--text); }
+
+  footer.report-footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  footer .meta { display: flex; gap: 24px; flex-wrap: wrap; }
+</style>
+</head>
+
+<body>
+<div class="container">
+<header class="report-header"><div class="title"><h1>PRD: file-browser — Validation Report</h1><div class="subtitle">_bmad-output/planning-artifacts/prds/prd-file-browser-2026-10-26/prd.md</div></div><div class="grade grade-fair">Fair</div></header>
+<div class="synthesis"><p>The PRD is coherent and honest for a hobby/course project. It is correctly shaped (one journey, glossary, non-goals, tagged assumptions), the vision states what the product is, and the privacy rules are concrete and enforceable.</p><p>Its weakest part is done-ness in the newest feature. FR-9 to FR-11 copy the EARS wording verbatim, so “compatible”, “no longer available” and “if the media supports these controls” are still undefined. An engineer or a grader cannot tell from the PRD alone when those FRs are done. The process-showcase thesis, which is what is actually graded, also lives only in SM-4 and §7 rather than shaping the features.</p></div>
+<div class="dimension-summary"><div class="dim-card"><div class="dim-name">Decision-readiness</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div><div class="dim-card"><div class="dim-name">Substance over theater</div><div class="dim-verdict" style="color: var(--verdict-strong)">strong</div></div><div class="dim-card"><div class="dim-name">Strategic coherence</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div><div class="dim-card"><div class="dim-name">Done-ness clarity</div><div class="dim-verdict" style="color: var(--verdict-thin)">thin</div></div><div class="dim-card"><div class="dim-name">Scope honesty</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div><div class="dim-card"><div class="dim-name">Downstream usability</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div><div class="dim-card"><div class="dim-name">Shape fit</div><div class="dim-verdict" style="color: var(--verdict-strong)">strong</div></div></div>
+<section class="dimension"><details><summary><h2>Decision-readiness</h2><span class="verdict-pill verdict-adequate">adequate</span></summary><div class="dim-body"><div class="dim-judgment"><p>Decisions are stated as decisions (read-only picker, no fallback in v1, Chromium only), and the 3D rationale is flagged as an unconfirmed assumption rather than smoothed over. The four open questions are genuinely open. They carry no owner or revisit trigger in the PRD itself (those were logged only in the memlog), and §2.2 (non-users: Firefox/Safari) quietly pre-answers open question 1.</p></div></div><div class="findings-list"><article class="finding"><header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Open questions have no owner or trigger</h3><span class="finding-location">§9</span></header><div class="finding-note">Questions 1–3 state no condition for being resolved; §2.2 and §6.2 already lean toward “no fallback”.</div><div class="finding-fix"><strong>Fix:</strong> Add one line per question: owner (author) and revisit condition (e.g. after testing a 10k-file folder).</div></article></div></details></section>
+<section class="dimension"><details><summary><h2>Substance over theater</h2><span class="verdict-pill verdict-strong">strong</span></summary><div class="dim-body"><div class="dim-judgment"><p>No persona theater (one journey), no innovation section, no invented differentiation. §7 names real mechanisms (no allocation or setState per frame, src/lib has no React). The vision is specific to this product.</p></div></div><div class="findings-list"></div></details></section>
+<section class="dimension"><details><summary><h2>Strategic coherence</h2><span class="verdict-pill verdict-adequate">adequate</span></summary><div class="dim-body"><div class="dim-judgment"><p>The real thesis is “a privacy-by-construction app that evidences a disciplined AI-assisted process”. It appears in the brief but in the PRD only through §7 and SM-4; the Vision states the goal but the feature list reads as a backlog. Counter-metric SM-C1 is a good touch. SM-2 and SM-4 have no verification method.</p></div></div><div class="findings-list"><article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Thesis not tied to features; SM-2/SM-4 not verifiable</h3><span class="finding-location">§1, §8 SM-2, SM-4</span></header><div class="finding-note">“The grader can follow the process” and “each selection shows its preview” have no pass condition, so they cannot be marked met or unmet.</div><div class="finding-fix"><strong>Fix:</strong> Add a one-sentence thesis to §1 and a pass condition per SM (e.g. SM-4: README lists brief, EARS file, review skill; SM-2: manual checklist run against a fixture folder).</div></article></div></details></section>
+<section class="dimension"><details open><summary><h2>Done-ness clarity</h2><span class="verdict-pill verdict-thin">thin</span></summary><div class="dim-body"><div class="dim-judgment"><p>FR-1, FR-2, FR-4 and FR-7 carry testable consequences. The audio/video FRs, which are the newest scope, do not. FR-9 keeps EARS wording where the key terms are undefined, FR-10 conditions its controls on the media supporting them without saying when it doesn&#x27;t, and FR-11 does not define “no longer available”. FR-3, FR-5 and FR-8 are also light. There is no performance bound for the 3D view.</p></div></div><div class="findings-list"><article class="finding"><header><span class="badge badge-sev-high">high</span><h3 class="finding-title">FR-9 “compatible” undefined; trigger conflicts with UJ-1</h3><span class="finding-location">§4.4 FR-9</span></header><div class="finding-note">FR-9 fires “WHEN a folder contains compatible audio or video files”, but UJ-1 shows the player appearing on selecting a file. No list of supported formats and no consequences are given, so “done” cannot be tested.</div><div class="finding-fix"><strong>Fix:</strong> Define compatible as what the browser reports through canPlayType, name the target formats (e.g. mp3, wav, mp4, webm), and state consequences: selecting a playable file shows the player; an unplayable file shows metadata only.</div></article><article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">FR-11 “no longer available” is undefined</h3><span class="finding-location">§4.4 FR-11</span></header><div class="finding-note">Nothing says how unavailability is detected (file handle read failure vs media error event) or what the message must contain.</div><div class="finding-fix"><strong>Fix:</strong> Define both triggers and require a message that names the file and the cause class.</div></article><article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">FR-10 control set is conditional with no condition</h3><span class="finding-location">§4.4 FR-10</span></header><div class="finding-note">“IF the selected media supports these controls” is circular for audio/video that always can play, pause, seek and set volume.</div><div class="finding-fix"><strong>Fix:</strong> State controls always shown, and when duration is unknown (e.g. Infinity) show it as unavailable.</div></article><article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">FR-3, FR-5, FR-8 lack bounds</h3><span class="finding-location">§4.2, §4.3</span></header><div class="finding-note">FR-3 has no key bindings, FR-5 no match semantics (case, substring), FR-8 no consequences (corrupt PDF, page navigation).</div><div class="finding-fix"><strong>Fix:</strong> Add two or three consequences each, e.g. arrow keys move, Enter selects; filter is case-insensitive substring; a corrupt PDF shows an error.</div></article><article class="finding"><header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">No performance bound for the 3D view</h3><span class="finding-location">§7, §9 question 2</span></header><div class="finding-note">Open question 2 leaves large trees unbounded, so a hang on a big folder is not a defect by the PRD&#x27;s own terms.</div><div class="finding-fix"><strong>Fix:</strong> Add a provisional bound tagged [ASSUMPTION] (e.g. interactive with 5,000 files) or state explicitly that none is promised.</div></article></div></details></section>
+<section class="dimension"><details><summary><h2>Scope honesty</h2><span class="verdict-pill verdict-adequate">adequate</span></summary><div class="dim-body"><div class="dim-judgment"><p>Non-goals and §6.2 are explicit, assumptions are tagged inline and indexed. Open-items density (4 questions, 4 assumptions) is fine for a hobby PRD. One gap: §6.2 lists text and other previews as deferred while open question 3 is the same item under another name.</p></div></div><div class="findings-list"></div></details></section>
+<section class="dimension"><details><summary><h2>Downstream usability</h2><span class="verdict-pill verdict-adequate">adequate</span></summary><div class="dim-body"><div class="dim-judgment"><p>IDs are contiguous and the glossary exists. Terms drift slightly: FR-9 says “a folder” where the glossary says “chosen folder”, “node” and “sign” are used but not defined, and “tree” and “folder tree” are used interchangeably. Every FR says “Realizes UJ-1”, which carries little information, and UJ-1 has an unnamed protagonist (“the author”).</p></div></div><div class="findings-list"><article class="finding"><header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Glossary drift</h3><span class="finding-location">§3, FR-5, FR-9</span></header><div class="finding-note">“node” and “sign” are undefined; FR-9 uses “a folder”.</div><div class="finding-fix"><strong>Fix:</strong> Add Node and Filter sign to the glossary and use Chosen folder in FR-9.</div></article><article class="finding"><header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Journey coverage is uneven</h3><span class="finding-location">§2.3</span></header><div class="finding-note">UJ-1 never exercises keyboard navigation (FR-3) or the error path (FR-11), yet all FRs cite it.</div><div class="finding-fix"><strong>Fix:</strong> Cite UJ-1 only where it applies; add a short edge case for an unplayable file.</div></article></div></details></section>
+<section class="dimension"><details><summary><h2>Shape fit</h2><span class="verdict-pill verdict-strong">strong</span></summary><div class="dim-body"><div class="dim-judgment"><p>Single operator, hobby stakes, about two and a half pages: one journey, light metrics, no persona or compliance sections. The shape matches the product.</p></div></div><div class="findings-list"></div></details></section>
+<div class="mechanical"><h3>Mechanical notes</h3><ul><li>IDs: FR-1 to FR-11, SM-1 to SM-4 and SM-C1, UJ-1 are contiguous and unique.</li><li>Assumptions index round-trips: four inline [ASSUMPTION] tags (§3, §4.1, FR-2, §9.4), four index entries.</li><li>SM-3 and SM-4 validate §7 rather than FR IDs; acceptable but not traceable to a single FR.</li><li>§6.2 text and other previews duplicates §9 question 3.</li></ul></div>
+<footer class="report-footer"><div class="meta"><span>Rubric: .claude/skills/bmad-prd/assets/prd-validation-checklist.md</span><span>Generated: 2026-10-26T15:30:44+02:00</span></div></footer></div></body></html>
