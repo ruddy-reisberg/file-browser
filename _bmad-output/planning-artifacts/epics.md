@@ -1,6 +1,6 @@
 ---
 status: draft
-stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics']
+stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-create-stories']
 inputDocuments:
   - _bmad-output/planning-artifacts/prds/prd-file-browser-2026-10-26/prd.md
   - _bmad-output/planning-artifacts/architecture/architecture-file-browser-2026-10-26/ARCHITECTURE-SPINE.md
@@ -14,6 +14,8 @@ inputDocuments:
 ## Overview
 
 This document provides the epic and story breakdown for the work that remains on file-browser, decomposing the requirements from the PRD and the Architecture spine (cross-checked against the spec). FR1 to FR8 are already built and are not re-planned; they are listed for traceability. No UX design document exists, so there are no UX design requirements.
+
+Epic split rationale: Epic 1 (new player) and Epic 2 (hardening of existing behavior) both touch the preview code (`ImagePreview`, `DetailPane`). They stay separate because Epic 2 is an independent risk boundary with no player in it and can be built in either order; the overlap is limited to the PDF path of `ImagePreview` (Story 2.1 vs Story 1.2). Consolidation was considered and rejected.
 
 ## Requirements Inventory
 
@@ -90,3 +92,236 @@ A user can select an audio or video file and play it in a mini-player in the det
 When a PDF cannot render, the user sees an explicit message instead of a blank pane. After picking a new folder, both views start clean: selection and list expansion are reset, and the 3D leaf and the list pane cannot disagree about what is selected.
 **FRs covered:** FR8 (the silent-error gap), FR2 (state reset on a new pick)
 **Carries:** AR4, AR5 (PDF path)
+
+## Epic 1: Play audio and video without leaving the app
+
+A user can select an audio or video file and play it in a mini-player in the detail pane, in the list view and in the 3D leaf. They can seek, change volume and see the duration, by keyboard if they want. Navigating away or a failing file stops playback cleanly, with an explicit error when it fails.
+
+### Story 1.1: One classifier decides what kind of file it is
+
+As the author,
+I want audio, video, image, PDF and other files recognized the same way everywhere,
+So that the detail pane and the 3D leaf never disagree about what a file is.
+
+**Acceptance Criteria:**
+
+**Given** a `File` with an allowlisted MIME type (for example `audio/mpeg`, `video/mp4`, `image/png`, `application/pdf`)
+**When** it is classified in `src/lib/file-kind.ts`
+**Then** it returns the matching `FileKind` (`image | pdf | audio | video | other`)
+**And** the mapping is one table with tests built from in-memory `File` fixtures (AR1, AR2; AD-5; enables FR9)
+
+**Given** a file whose MIME is empty, `application/octet-stream`, or an ambiguous container such as `video/mp2t` on a `.ts` source file
+**When** it is classified
+**Then** the extension decides: `.ts` is `other`; `.mp3`, `.wav`, `.m4a` and `.ogg` are `audio`; `.mp4` and `.webm` are `video`, since a video element also plays audio-only files of those types
+**And** edge cases are tested: no extension, uppercase extension, `.ogg` and `.webm`, `lastModified` of 0
+
+**Given** `isImageFile`, `isPdfFile`, `leafCategory` and `describeKind`
+**When** they are called
+**Then** all derive from the classifier, and no component inspects `file.type` or the extension directly
+**And** every per-kind lookup in the code is an exhaustive `Record<FileKind, …>` that fails typecheck when a kind is missing
+
+**Given** audio and video leaves in the 3D scene
+**When** the scene renders them
+**Then** their colors come from new tokens in `tokens.css` and `useSceneTheme`, with no hardcoded values
+**And** `npm run check` is green
+
+### Story 1.2: Each preview manages its own loading and errors
+
+As the author,
+I want the detail pane to hand each file to the right preview, and each preview to own its own state,
+So that adding the player cannot break image and PDF previews.
+
+**Acceptance Criteria:**
+
+**Given** a selected file of any `FileKind`
+**When** `DetailPane` renders
+**Then** it holds no async state and renders the preview matching the kind, keyed by `node.path`
+**And** images show the same preview, dimensions, EXIF and error message as before (AR3, AR5; AD-4, AD-6; protects FR7)
+
+**Given** an image whose dimensions or EXIF cannot be read
+**When** the preview renders
+**Then** the explicit error message shows inside the image preview, not in `DetailPane`
+**And** a stale async result never replaces the current selection
+
+**Given** the selection changes quickly between two images
+**When** the first read finishes after the second selection
+**Then** the first result is ignored
+**And** every object URL created is revoked on cleanup
+
+**Given** the existing behavior
+**When** `npm run check` runs
+**Then** it is green and the existing preview tests still pass
+
+### Story 1.3: Play an audio or video file in the detail pane
+
+As the author,
+I want to select an audio or video file and play it in a mini-player,
+So that I can listen to or watch it without leaving the file browser.
+
+**Acceptance Criteria:**
+
+**Given** a selected file classified as `audio` or `video`
+**When** the detail pane renders
+**Then** it shows one `MediaPlayer` using the native `<audio>` or `<video>` element with `controls`
+**And** playback does not start until the user acts (FR9, FR10; AR5, AR6, AR9)
+
+**Given** the player is shown
+**When** the user uses it
+**Then** play/pause, seek, volume and duration are available where the media supports them
+**And** they are reachable by keyboard
+
+**Given** the player created an object URL
+**When** the selection changes or the player unmounts
+**Then** the URL is revoked in the effect cleanup
+**And** it is not revoked on `loadedmetadata` or when playback ends, so the user can replay
+
+**Given** jsdom does not implement media playback
+**When** tests run
+**Then** they stub `HTMLMediaElement.prototype.play`, `pause` and `load`
+**And** `npm run check` is green
+
+### Story 1.4: Playback stops cleanly and failures are explicit
+
+As the author,
+I want playback to stop when I move away and to tell me when a file cannot play,
+So that I never hear stale audio or stare at a broken player.
+
+**Acceptance Criteria:**
+
+**Given** a file is playing
+**When** I select another node, switch between list and 3D, or pick a new folder
+**Then** playback stops and the player state resets
+**And** at most one player exists at a time (FR11; AR5, AR6)
+
+**Given** a media file that the browser cannot decode
+**When** the media element fires an `error` event
+**Then** an explicit error message shows in the pane
+**And** the rest of the app stays usable
+
+**Given** a file that can no longer be read after the folder was picked
+**When** I select it
+**Then** an explicit error message shows, with no crash and no blank pane
+**And** this is tested by firing the `error` event by hand
+
+### Story 1.5: Play media from the 3D leaf
+
+As the author,
+I want the player to work inside the 3D view's leaf,
+So that I get the same experience in both views.
+
+**Acceptance Criteria:**
+
+**Given** a media file opened in the 3D Leaf
+**When** I close the Leaf (button, Escape or backdrop)
+**Then** playback stops at the close request, not 260 ms later when it unmounts
+**And** the fold animation continues without sound (FR9, FR10, FR11; AR7)
+
+**Given** the Leaf is open on a media file
+**When** I press Tab
+**Then** the focus trap includes `audio[controls]` and `video[controls]`
+**And** focus never escapes the Leaf
+
+**Given** the Leaf test suite
+**When** `npm run check` runs
+**Then** new tests cover stop-on-close and the focus trap
+**And** the existing Leaf tests still pass
+
+### Story 1.6: Confirm native controls work by keyboard
+
+As the author,
+I want a recorded check that the native media controls are keyboard-operable in current Chrome and Edge,
+So that FR10 is verified rather than assumed.
+
+**Acceptance Criteria:**
+
+**Given** the player in the list view and in the 3D Leaf, in current Chrome and in Edge
+**When** I operate play/pause, seek and volume using only the keyboard
+**Then** each control works
+**And** the result per browser is recorded in the story (FR10; AR8, NFR7)
+
+**Given** any control fails by keyboard
+**When** the result is recorded
+**Then** the story ends with a follow-up story for custom controls under the same architecture decision (AD-7)
+**And** the spec's open question on this is updated either way
+
+## Epic 2: Previews fail loudly and both views agree on selection
+
+When a PDF cannot render, the user sees an explicit message instead of a blank pane. After picking a new folder, both views start clean: selection and list expansion are reset, and the 3D leaf and the list pane cannot disagree about what is selected.
+
+### Story 2.1: A PDF that cannot render says so
+
+As the author,
+I want an explicit message when a PDF cannot be displayed,
+So that I am not left looking at a blank pane wondering what happened.
+
+**Acceptance Criteria:**
+
+**Given** a selected PDF that is corrupt, encrypted, or unreadable
+**When** rendering its first page fails
+**Then** the detail pane shows an explicit error message (the existing `detail-pane__error` pattern)
+**And** there is no empty `catch` or `() => {}` left in the PDF path (FR8; AR5)
+
+**Given** a PDF render is still running
+**When** I select another file
+**Then** the stale result never replaces the current selection and no error from the old file appears
+**And** the PDF document is destroyed in all outcomes
+
+**Given** a valid PDF
+**When** it renders
+**Then** the first page shows as before, and the worker is still bundled and never fetched
+**And** a test mocks `pdfjs-dist` to cover both the failure and the success path
+
+**Given** the change
+**When** `npm run check` runs
+**Then** it is green
+
+### Story 2.2: A new folder starts both views clean
+
+As the author,
+I want picking a new folder to reset everything tied to the previous one,
+So that nothing carries over from the old folder just because two paths happen to match.
+
+**Acceptance Criteria:**
+
+**Given** a list view where I expanded a nested folder such as `docs/deep`
+**When** I pick a new folder that also contains `docs/deep`
+**Then** the list shows it collapsed, as it would on a first pick
+**And** the tree is remounted on each pick, not matched by path across picks (FR2; AR4)
+
+**Given** a selection and an active filter
+**When** I pick a new folder
+**Then** the selection is cleared and the filter query is empty in both views
+**And** the 3D view starts over on the new folder
+
+**Given** the new behavior
+**When** tests run
+**Then** `App.test.tsx` covers the expansion reset in addition to the existing filter reset
+**And** `npm run check` is green
+
+### Story 2.3: The 3D leaf and the list pane show the same selection
+
+As the author,
+I want one record of what is selected, whichever view I am in,
+So that the two views can never disagree about the selected file.
+
+**Acceptance Criteria:**
+
+**Given** the 3D view
+**When** I open a file's leaf
+**Then** `App.selected` becomes that file, and the Leaf renders `selected`, not a separate copy held by `SceneView`
+**And** `SceneView` keeps only a presentation flag for "leaf is open", not a `TreeNode` (FR2; AR4)
+
+**Given** I open a file's leaf, close it, and switch to the list view
+**When** the list view renders
+**Then** the detail pane shows that same file
+**And** the row is marked selected in the tree
+
+**Given** a file selected in the list view
+**When** I switch to the 3D view
+**Then** the 3D view does not open a leaf on its own
+**And** `App.selected` is unchanged
+
+**Given** the change
+**When** tests run
+**Then** a test covers both directions of the switch, and the existing `Leaf` tests still pass
+**And** `npm run check` is green
