@@ -6,3 +6,7 @@ dist-ssr
 *.tsbuildinfo
 
 settings.local.json
+# BMAD
+_bmad/
+.agents/
+.claude/skills/bmad-*/
