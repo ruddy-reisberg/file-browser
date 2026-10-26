@@ -9,12 +9,25 @@ interface TreeProps {
 }
 
 export default function Tree({ root, selectedPath, onSelect }: TreeProps) {
+  const children = root.children ?? []
+  const folders = children.filter((child) => child.kind === 'dir')
+  const files = children.filter((child) => child.kind === 'file')
+
   return (
-    <ul className="tree" role="tree" aria-label="Folder contents">
-      {root.children?.map((child) => (
-        <TreeItem key={child.path} node={child} depth={0} selectedPath={selectedPath} onSelect={onSelect} />
+    <div className="tree-forest">
+      {folders.map((folder) => (
+        <ul key={folder.path} className="tree" role="tree" aria-label={folder.name}>
+          <TreeItem node={folder} depth={0} selectedPath={selectedPath} onSelect={onSelect} />
+        </ul>
       ))}
-    </ul>
+      {files.length > 0 && (
+        <ul className="tree" role="tree" aria-label={root.name || 'Files'}>
+          {files.map((file) => (
+            <TreeItem key={file.path} node={file} depth={0} selectedPath={selectedPath} onSelect={onSelect} />
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
 

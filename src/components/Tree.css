@@ -41,3 +41,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.tree-forest {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
