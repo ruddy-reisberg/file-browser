@@ -28,6 +28,8 @@ interface SceneViewProps {
   root: TreeNode
   /** Mirrors what the user picks to the rest of the app. */
   onSelect: (node: TreeNode) => void
+  /** The app's selected node; the Leaf renders from it. */
+  selected: TreeNode | null
   /** Name filter, owned by App so the list view shares it. */
   query: string
   onQueryChange: (query: string) => void
@@ -45,11 +47,11 @@ function wheelPixels(event: WheelEvent): number {
  * tree's entries are Branches, and a file's metadata opens as a Leaf.
  * This component is the DOM layer: navigation state, input, HUD and the Leaf.
  */
-export default function SceneView({ root, onSelect, query, onQueryChange, emptyMessage }: SceneViewProps) {
+export default function SceneView({ root, onSelect, selected, query, onQueryChange, emptyMessage }: SceneViewProps) {
   const [stateRef] = useState<{ current: SceneState }>(() => ({ current: createSceneState(prefersReducedMotion()) }))
   const [stack, setStack] = useState<TreeNode[]>([root])
   const [activeTreeId, setActiveTreeId] = useState<string | null>(null)
-  const [openNode, setOpenNode] = useState<TreeNode | null>(null)
+  const [leafOpen, setLeafOpen] = useState(false)
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null)
 
   const current = stack[stack.length - 1]
@@ -126,7 +128,7 @@ export default function SceneView({ root, onSelect, query, onQueryChange, emptyM
         const shape = shapeTree(activeTree.branches.length)
         if (index >= 0) state.climbTarget = shape.slots[index].level
       }
-      setOpenNode(node)
+      setLeafOpen(true)
       onSelect(node)
     },
     [activeTree, enterFolder, onSelect, stateRef],
@@ -192,9 +194,12 @@ export default function SceneView({ root, onSelect, query, onQueryChange, emptyM
     navigate(step[0] * TURN_PER_PX, step[1] * CLIMB_PER_PX)
   }
 
+  // The Leaf shows only for a selected file; a stale flag over a folder must not swallow Escape.
+  const leafVisible = leafOpen && selected?.kind === 'file'
+
   // Escape steps back one level: leaf (handled by the Leaf itself) -> tree -> parent folder.
   function handleRootKeyDown(event: KeyboardEvent) {
-    if (event.key !== 'Escape' || openNode) return
+    if (event.key !== 'Escape' || leafVisible) return
     goBack()
   }
 
@@ -295,9 +300,9 @@ export default function SceneView({ root, onSelect, query, onQueryChange, emptyM
         </ul>
       </nav>
 
-      {openNode && (
-        <Leaf label={openNode.name} onClose={() => setOpenNode(null)}>
-          <DetailPane node={openNode} />
+      {leafVisible && selected && (
+        <Leaf label={selected.name} onClose={() => setLeafOpen(false)}>
+          <DetailPane node={selected} />
         </Leaf>
       )}
     </div>

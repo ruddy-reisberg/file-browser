@@ -89,6 +89,7 @@ export default function App() {
                   key={pickCount}
                   root={root ?? EMPTY_ROOT}
                   onSelect={setSelected}
+                  selected={selected}
                   query={query}
                   onQueryChange={setQuery}
                   emptyMessage={root ? undefined : 'Choose a folder to grow your first trees.'}
