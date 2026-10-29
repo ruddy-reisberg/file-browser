@@ -11,7 +11,8 @@ interface LeafProps {
   children: ReactNode
 }
 
-const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+const FOCUSABLE =
+  'button, [href], input, select, textarea, audio[controls], video[controls], [tabindex]:not([tabindex="-1"])'
 
 /**
  * The metadata card of one file: a modal shaped like a leaf that unfurls in,
@@ -35,6 +36,8 @@ export default function Leaf({ label, onClose, children }: LeafProps) {
 
   function requestClose() {
     if (closing) return
+    // Stop any audio or video at once: the leaf stays mounted for the fold animation.
+    dialogRef.current?.querySelectorAll<HTMLMediaElement>('audio, video').forEach((media) => media.pause())
     setClosing(true)
     closeTimer.current = window.setTimeout(onClose, CLOSE_MS)
   }

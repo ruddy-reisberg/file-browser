@@ -107,6 +107,89 @@ describe('Leaf', () => {
     expect(close).toHaveFocus()
   })
 
+  describe('with media', () => {
+    let pause: ReturnType<typeof vi.fn>
+
+    beforeEach(() => {
+      pause = vi.fn()
+      HTMLMediaElement.prototype.pause = pause as unknown as () => void
+      HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve())
+      HTMLMediaElement.prototype.load = vi.fn()
+    })
+
+    function renderMedia(tag: 'audio' | 'video' = 'audio') {
+      const onClose = vi.fn()
+      const Tag = tag
+      render(
+        <Leaf label="song.mp3" onClose={onClose}>
+          <Tag controls tabIndex={-1} data-testid="media" />
+        </Leaf>,
+      )
+      return onClose
+    }
+
+    it('pauses at once when the close button is pressed, before the timer fires', () => {
+      const onClose = renderMedia()
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+      expect(pause).toHaveBeenCalledTimes(1)
+      expect(onClose).not.toHaveBeenCalled()
+      act(() => {
+        vi.advanceTimersByTime(300)
+      })
+      expect(onClose).toHaveBeenCalledTimes(1)
+    })
+
+    it('pauses at once on Escape', () => {
+      const onClose = renderMedia()
+      fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+      expect(pause).toHaveBeenCalledTimes(1)
+      expect(onClose).not.toHaveBeenCalled()
+    })
+
+    it('pauses at once when the backdrop is clicked', () => {
+      const onClose = renderMedia()
+      fireEvent.click(screen.getByRole('dialog').parentElement!)
+      expect(pause).toHaveBeenCalledTimes(1)
+      expect(onClose).not.toHaveBeenCalled()
+    })
+
+    it('pauses a video too', () => {
+      renderMedia('video')
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+      expect(pause).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not pause a second time when close is asked twice', () => {
+      renderMedia()
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+      fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+      expect(pause).toHaveBeenCalledTimes(1)
+    })
+
+    it('closes as before when there is no media', () => {
+      const onClose = renderLeaf()
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+      act(() => {
+        vi.advanceTimersByTime(300)
+      })
+      expect(onClose).toHaveBeenCalledTimes(1)
+      expect(pause).not.toHaveBeenCalled()
+    })
+
+    it('includes the media element in the focus trap', () => {
+      renderMedia()
+      const close = screen.getByRole('button', { name: 'Close' })
+      const media = screen.getByTestId('media')
+      media.focus()
+      expect(media).toHaveFocus()
+
+      fireEvent.keyDown(media, { key: 'Tab' })
+      expect(close).toHaveFocus()
+      fireEvent.keyDown(close, { key: 'Tab', shiftKey: true })
+      expect(media).toHaveFocus()
+    })
+  })
+
   it('gives focus back to the element that opened it', () => {
     const opener = document.createElement('button')
     document.body.appendChild(opener)

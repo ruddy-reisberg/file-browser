@@ -166,6 +166,28 @@ describe('App selection across views', () => {
       expect(container.querySelectorAll('audio')).toHaveLength(0)
     })
 
+    it('pauses the audio of a 3D Leaf at the close request', async () => {
+      webgl.available = true
+      const { container } = render(<App />)
+      vi.mocked(pickDirectory).mockResolvedValue({ rootName: 'root', entries: [entry(['docs', 'a.mp3'])] })
+      fireEvent.click(screen.getByRole('button', { name: /choose folder/i }))
+      fireEvent.click(await screen.findByRole('button', { name: /^Climb docs/ }))
+      fireEvent.click(screen.getByRole('button', { name: 'Read a.mp3' }))
+      expect(container.querySelectorAll('audio')).toHaveLength(1)
+
+      const pause = vi.mocked(HTMLMediaElement.prototype.pause)
+      pause.mockClear()
+      vi.useFakeTimers()
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+      expect(pause).toHaveBeenCalledTimes(1)
+      expect(container.querySelectorAll('audio')).toHaveLength(1)
+      act(() => {
+        vi.advanceTimersByTime(300)
+      })
+      vi.useRealTimers()
+      expect(container.querySelectorAll('audio')).toHaveLength(0)
+    })
+
     it('has no media element after a new folder is picked', async () => {
       const { container } = render(<App />)
       await pickAudio()
