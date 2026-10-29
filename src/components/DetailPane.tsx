@@ -1,58 +1,27 @@
-import { useEffect, useState } from 'react'
+import type { ComponentType } from 'react'
+import { classifyFile, type FileKind } from '../lib/file-kind'
 import { getFileMetadata } from '../lib/metadata'
-import { isImageFile, isPdfFile, parseExif, readImageDimensions } from '../lib/image'
-import type { ExifData, ImageDimensions, TreeNode } from '../lib/types'
+import type { TreeNode } from '../lib/types'
+import DetailRow from './DetailRow'
 import ImagePreview from './ImagePreview'
+import PdfPreview from './PdfPreview'
 import './DetailPane.css'
 
 interface Props {
   node: TreeNode | null
 }
 
-const EXIF_LABELS: Record<keyof ExifData, string> = {
-  make: 'Camera make',
-  model: 'Camera model',
-  orientation: 'Orientation',
-  dateTaken: 'Date taken',
-  exposureTime: 'Exposure time',
-  fNumber: 'Aperture (f-number)',
-  iso: 'ISO',
-  focalLength: 'Focal length',
+/** The preview for each kind; every kind must be handled. Audio and video have none yet. */
+const PREVIEW_BY_KIND: Record<FileKind, ComponentType<{ file: File }> | null> = {
+  image: ImagePreview,
+  pdf: PdfPreview,
+  audio: null,
+  video: null,
+  other: null,
 }
 
+/** Metadata for the selected node plus the preview for its kind; holds no async state itself. */
 export default function DetailPane({ node }: Props) {
-  const [dimensions, setDimensions] = useState<ImageDimensions | null>(null)
-  const [exif, setExif] = useState<ExifData | null>(null)
-  const [imageError, setImageError] = useState<string | null>(null)
-
-  const file = node?.kind === 'file' ? node.file ?? null : null
-  const isImage = file ? isImageFile(file) : false
-
-  const isPdf = file ? isPdfFile(file) : false
-
-  useEffect(() => {
-    setDimensions(null)
-    setExif(null)
-    setImageError(null)
-    if (!file || !isImage) return
-
-    let cancelled = false
-    void Promise.all([readImageDimensions(file), parseExif(file)]).then(
-      ([dims, exifData]) => {
-        if (cancelled) return
-        setDimensions(dims)
-        setExif(exifData)
-      },
-      (err) => {
-        if (cancelled) return
-        setImageError(err instanceof Error ? err.message : 'Could not read image.')
-      },
-    )
-    return () => {
-      cancelled = true
-    }
-  }, [file, isImage])
-
   if (!node) {
     return (
       <div className="detail-pane detail-pane--empty">
@@ -73,45 +42,21 @@ export default function DetailPane({ node }: Props) {
     )
   }
 
-  const meta = getFileMetadata(node.file!)
-  const exifEntries = exif ? (Object.keys(exif) as (keyof ExifData)[]).filter((k) => exif[k] !== undefined) : []
+  const file = node.file!
+  const meta = getFileMetadata(file)
+  const Preview = PREVIEW_BY_KIND[classifyFile(file)]
 
   return (
     <div className="detail-pane">
       <h2 className="detail-pane__title">{meta.name}</h2>
 
       <dl className="detail-pane__list">
-        <Row label="Kind" value={meta.kindLabel} />
-        <Row label="Size" value={meta.sizeLabel} />
-        <Row label="Last modified" value={meta.lastModifiedLabel} />
-        {dimensions && <Row label="Dimensions" value={`${dimensions.width} × ${dimensions.height} px`} />}
+        <DetailRow label="Kind" value={meta.kindLabel} />
+        <DetailRow label="Size" value={meta.sizeLabel} />
+        <DetailRow label="Last modified" value={meta.lastModifiedLabel} />
       </dl>
 
-      {isImage && imageError && <p className="detail-pane__error">{imageError}</p>}
-
-      {isImage && !imageError && <ImagePreview file={node.file!} />}
-
-      {isPdf && <ImagePreview file={node.file!} />}
-
-      {exifEntries.length > 0 && (
-        <>
-          <h3 className="detail-pane__heading">EXIF</h3>
-          <dl className="detail-pane__list">
-            {exifEntries.map((key) => (
-              <Row key={key} label={EXIF_LABELS[key]} value={String(exif![key])} />
-            ))}
-          </dl>
-        </>
-      )}
-    </div>
-  )
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="detail-pane__row">
-      <dt className="detail-pane__label">{label}</dt>
-      <dd className="detail-pane__value">{value}</dd>
+      {Preview && <Preview key={node.path} file={file} />}
     </div>
   )
 }

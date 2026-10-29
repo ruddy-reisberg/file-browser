@@ -1,59 +1,87 @@
 import { useEffect, useState } from 'react'
-import * as pdfjs from 'pdfjs-dist'
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
-import { isPdfFile } from '../lib/image'
+import { parseExif, readImageDimensions } from '../lib/image'
+import type { ExifData, ImageDimensions } from '../lib/types'
+import DetailRow from './DetailRow'
 import './ImagePreview.css'
-
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
 interface Props {
   file: File
 }
 
-/** Renders the first page of a PDF to a PNG data URL. */
-async function renderPdfFirstPage(file: File): Promise<string> {
-  const data = new Uint8Array(await file.arrayBuffer())
-  const pdf = await pdfjs.getDocument({ data }).promise
-  try {
-    const page = await pdf.getPage(1)
-    const viewport = page.getViewport({ scale: 1.5 })
-    const canvas = document.createElement('canvas')
-    canvas.width = viewport.width
-    canvas.height = viewport.height
-    await page.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise
-    return canvas.toDataURL('image/png')
-  } finally {
-    void pdf.destroy()
-  }
+const EXIF_LABELS: Record<keyof ExifData, string> = {
+  make: 'Camera make',
+  model: 'Camera model',
+  orientation: 'Orientation',
+  dateTaken: 'Date taken',
+  exposureTime: 'Exposure time',
+  fNumber: 'Aperture (f-number)',
+  iso: 'ISO',
+  focalLength: 'Focal length',
 }
 
+/** An image with its dimensions and EXIF; owns its object URL, its async reads and their error. */
 export default function ImagePreview({ file }: Props) {
   const [url, setUrl] = useState<string | null>(null)
+  const [dimensions, setDimensions] = useState<ImageDimensions | null>(null)
+  const [exif, setExif] = useState<ExifData | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setUrl(null)
-    if (isPdfFile(file)) {
-      let cancelled = false
-      renderPdfFirstPage(file).then(
-        (dataUrl) => {
-          if (!cancelled) setUrl(dataUrl)
-        },
-        () => {},
-      )
-      return () => {
-        cancelled = true
-      }
-    }
     const objectUrl = URL.createObjectURL(file)
     setUrl(objectUrl)
     return () => URL.revokeObjectURL(objectUrl)
   }, [file])
 
-  if (!url) return null
+  useEffect(() => {
+    setDimensions(null)
+    setExif(null)
+    setError(null)
+
+    let cancelled = false
+    void Promise.all([readImageDimensions(file), parseExif(file)]).then(
+      ([dims, exifData]) => {
+        if (cancelled) return
+        setDimensions(dims)
+        setExif(exifData)
+      },
+      (err) => {
+        if (cancelled) return
+        setError(err instanceof Error ? err.message : 'Could not read image.')
+      },
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [file])
+
+  const exifEntries = exif ? (Object.keys(exif) as (keyof ExifData)[]).filter((k) => exif[k] !== undefined) : []
 
   return (
-    <div className="image-preview">
-      <img className="image-preview__img" src={url} alt={file.name} />
-    </div>
+    <>
+      {dimensions && (
+        <dl className="detail-pane__list">
+          <DetailRow label="Dimensions" value={`${dimensions.width} × ${dimensions.height} px`} />
+        </dl>
+      )}
+
+      {error && <p className="detail-pane__error">{error}</p>}
+
+      {!error && url && (
+        <div className="image-preview">
+          <img className="image-preview__img" src={url} alt={file.name} />
+        </div>
+      )}
+
+      {exifEntries.length > 0 && (
+        <>
+          <h3 className="detail-pane__heading">EXIF</h3>
+          <dl className="detail-pane__list">
+            {exifEntries.map((key) => (
+              <DetailRow key={key} label={EXIF_LABELS[key]} value={String(exif![key])} />
+            ))}
+          </dl>
+        </>
+      )}
+    </>
   )
 }
