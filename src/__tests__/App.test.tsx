@@ -120,4 +120,59 @@ describe('App selection across views', () => {
     const row = within(await screen.findByRole('region', { name: 'Folder tree' })).getByText('readme.md').closest('li')
     expect(row).toHaveAttribute('aria-selected', 'true')
   })
+
+  describe('one media player', () => {
+    beforeEach(() => {
+      URL.createObjectURL = vi.fn(() => 'blob:x')
+      URL.revokeObjectURL = vi.fn()
+      HTMLMediaElement.prototype.pause = vi.fn()
+      HTMLMediaElement.prototype.load = vi.fn()
+      webgl.available = false
+    })
+
+    function mediaEntry(name: string) {
+      return { path: [name], file: new File(['x'], name, { type: 'audio/mpeg' }) }
+    }
+
+    async function pickAudio() {
+      vi.mocked(pickDirectory).mockResolvedValue({
+        rootName: 'root',
+        entries: [mediaEntry('a.mp3'), mediaEntry('b.mp3'), entry(['readme.md'])],
+      })
+      fireEvent.click(screen.getByRole('button', { name: /choose folder/i }))
+      fireEvent.click(await screen.findByText('a.mp3'))
+    }
+
+    it('keeps at most one audio element when another node is selected', async () => {
+      const { container } = render(<App />)
+      await pickAudio()
+      expect(container.querySelectorAll('audio')).toHaveLength(1)
+      fireEvent.click(screen.getByText('b.mp3'))
+      expect(container.querySelectorAll('audio')).toHaveLength(1)
+      fireEvent.click(screen.getByText('readme.md'))
+      expect(container.querySelectorAll('audio')).toHaveLength(0)
+    })
+
+    it('has no media element after switching to 3D', async () => {
+      webgl.available = true
+      const { container } = render(<App />)
+      vi.mocked(pickDirectory).mockResolvedValue({ rootName: 'root', entries: [mediaEntry('a.mp3')] })
+      fireEvent.click(screen.getByRole('button', { name: /choose folder/i }))
+      fireEvent.click(screen.getByRole('button', { name: 'List' }))
+      fireEvent.click(await screen.findByText('a.mp3'))
+      expect(container.querySelectorAll('audio')).toHaveLength(1)
+      fireEvent.click(screen.getByRole('button', { name: '3D' }))
+      await screen.findByRole('navigation', { name: 'Folders' })
+      expect(container.querySelectorAll('audio')).toHaveLength(0)
+    })
+
+    it('has no media element after a new folder is picked', async () => {
+      const { container } = render(<App />)
+      await pickAudio()
+      vi.mocked(pickDirectory).mockResolvedValue({ rootName: 'other', entries: [entry(['z.txt'])] })
+      fireEvent.click(screen.getByRole('button', { name: /choose folder/i }))
+      await screen.findByText('z.txt')
+      expect(container.querySelectorAll('audio')).toHaveLength(0)
+    })
+  })
 })
