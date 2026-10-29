@@ -19,6 +19,12 @@ vi.mock('../PdfPreview', () => ({
   default: ({ file }: { file: File }) => <div data-testid="pdf-preview">{file.name}</div>,
 }))
 
+vi.mock('../MediaPlayer', () => ({
+  default: ({ file, kind }: { file: File; kind: string }) => (
+    <div data-testid="media-player">{`${file.name}:${kind}`}</div>
+  ),
+}))
+
 function fileNode(name: string, type = '', path = name): TreeNode {
   return { name, kind: 'file', path, file: new File(['x'], name, { type }) }
 }
@@ -47,6 +53,7 @@ describe('DetailPane', () => {
     expect(screen.getByText('Last modified')).toBeTruthy()
     expect(screen.queryByTestId('image-preview')).toBeNull()
     expect(screen.queryByTestId('pdf-preview')).toBeNull()
+    expect(screen.queryByTestId('media-player')).toBeNull()
   })
 
   it('routes an image to the image preview', () => {
@@ -60,11 +67,13 @@ describe('DetailPane', () => {
     expect(screen.queryByTestId('image-preview')).toBeNull()
   })
 
-  it('shows metadata only for audio and video until they have a player', () => {
+  it('routes audio and video to the media player with their kind', () => {
     const { rerender } = render(<DetailPane node={fileNode('song.mp3', 'audio/mpeg')} />)
     expect(screen.getByText('MP3 Audio')).toBeTruthy()
+    expect(screen.getByTestId('media-player').textContent).toBe('song.mp3:audio')
     rerender(<DetailPane node={fileNode('clip.mp4', 'video/mp4')} />)
     expect(screen.getByText('MP4 Video')).toBeTruthy()
+    expect(screen.getByTestId('media-player').textContent).toBe('clip.mp4:video')
     expect(screen.queryByTestId('image-preview')).toBeNull()
     expect(screen.queryByTestId('pdf-preview')).toBeNull()
   })

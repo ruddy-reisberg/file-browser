@@ -53,6 +53,7 @@
   --row-height: 28px;
   --leaf-width: min(92vw, 34rem);
   --leaf-max-height: 86vh;
+  --media-max-height: 320px;
 
   /* Motion */
   --transition-fast: 120ms ease;

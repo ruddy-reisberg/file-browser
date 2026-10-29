@@ -1,0 +1,13 @@
+.media-player {
+  display: flex;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.media-player__element {
+  width: 100%;
+  max-height: var(--media-max-height);
+  border-radius: var(--radius-sm);
+}

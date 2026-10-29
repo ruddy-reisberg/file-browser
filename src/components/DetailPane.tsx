@@ -4,6 +4,7 @@ import { getFileMetadata } from '../lib/metadata'
 import type { TreeNode } from '../lib/types'
 import DetailRow from './DetailRow'
 import ImagePreview from './ImagePreview'
+import MediaPlayer from './MediaPlayer'
 import PdfPreview from './PdfPreview'
 import './DetailPane.css'
 
@@ -11,12 +12,12 @@ interface Props {
   node: TreeNode | null
 }
 
-/** The preview for each kind; every kind must be handled. Audio and video have none yet. */
-const PREVIEW_BY_KIND: Record<FileKind, ComponentType<{ file: File }> | null> = {
+/** The preview for each kind; every kind must be handled. */
+const PREVIEW_BY_KIND: Record<FileKind, ComponentType<{ file: File; kind: FileKind }> | null> = {
   image: ImagePreview,
   pdf: PdfPreview,
-  audio: null,
-  video: null,
+  audio: MediaPlayer,
+  video: MediaPlayer,
   other: null,
 }
 
@@ -44,7 +45,8 @@ export default function DetailPane({ node }: Props) {
 
   const file = node.file!
   const meta = getFileMetadata(file)
-  const Preview = PREVIEW_BY_KIND[classifyFile(file)]
+  const kind = classifyFile(file)
+  const Preview = PREVIEW_BY_KIND[kind]
 
   return (
     <div className="detail-pane">
@@ -56,7 +58,7 @@ export default function DetailPane({ node }: Props) {
         <DetailRow label="Last modified" value={meta.lastModifiedLabel} />
       </dl>
 
-      {Preview && <Preview key={node.path} file={file} />}
+      {Preview && <Preview key={node.path} file={file} kind={kind} />}
     </div>
   )
 }
