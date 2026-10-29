@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react'
 import { Html, useCursor } from '@react-three/drei'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
-import { DoubleSide, Shape, ShapeGeometry, type Group } from 'three'
+import { DoubleSide, Shape, ShapeGeometry, type Color, type Group } from 'three'
+import type { FileKind } from '../../lib/file-kind'
 import { BRANCH_REACH, clamp, easeOutBack, leafCategory, levelY, type BranchSlot } from '../../lib/scene-layout'
 import type { TreeNode } from '../../lib/types'
 import { useSceneState } from './scene-state'
@@ -53,9 +54,14 @@ export default function Branch({ node, slot, trunkRadius, theme, showLabel, grow
   const tip: [number, number, number] = [0, length * Math.sin(BRANCH_TILT), length * Math.cos(BRANCH_TILT)]
   const phase = useMemo(() => (slot.level * 1.7 + slot.angle) % (Math.PI * 2), [slot])
 
-  const leafColor = isFolder
-    ? theme.colors.leafFolder
-    : { image: theme.colors.leafImage, pdf: theme.colors.leafPdf, other: theme.colors.leafOther }[leafCategory(node.file)]
+  const leafColors: Record<FileKind, Color> = {
+    image: theme.colors.leafImage,
+    pdf: theme.colors.leafPdf,
+    audio: theme.colors.leafAudio,
+    video: theme.colors.leafVideo,
+    other: theme.colors.leafOther,
+  }
+  const leafColor = isFolder ? theme.colors.leafFolder : leafColors[leafCategory(node.file)]
 
   useFrame((frame, dt) => {
     const group = groupRef.current

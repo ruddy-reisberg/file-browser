@@ -1,16 +1,12 @@
+import { classifyFile } from './file-kind'
 import type { ExifData, ImageDimensions } from './types'
 
-const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'])
-
 export function isImageFile(file: File): boolean {
-  if (file.type.startsWith('image/')) return true
-  const dot = file.name.lastIndexOf('.')
-  if (dot < 0) return false
-  return IMAGE_EXTENSIONS.has(file.name.slice(dot + 1).toLowerCase())
+  return classifyFile(file) === 'image'
 }
 
 export function isPdfFile(file: File): boolean {
-  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+  return classifyFile(file) === 'pdf'
 }
 
 /** Reads natural pixel dimensions by loading the file into an <img>. */

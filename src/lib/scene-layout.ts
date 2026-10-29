@@ -1,4 +1,4 @@
-import { isImageFile, isPdfFile } from './image'
+import { classifyFile, type FileKind } from './file-kind'
 import type { TreeNode } from './types'
 
 /**
@@ -142,14 +142,11 @@ export function buildIslandTrees(dir: TreeNode): TreeSpec[] {
   return specs
 }
 
-export type LeafCategory = 'image' | 'pdf' | 'other'
+export type LeafCategory = FileKind
 
 /** Coarse file category; drives the colour of the leaf at the tip of a branch. */
 export function leafCategory(file: File | undefined): LeafCategory {
-  if (!file) return 'other'
-  if (isImageFile(file)) return 'image'
-  if (isPdfFile(file)) return 'pdf'
-  return 'other'
+  return file ? classifyFile(file) : 'other'
 }
 
 // ---------------------------------------------------------------------------

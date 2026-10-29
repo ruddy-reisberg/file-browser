@@ -44,6 +44,25 @@ describe('describeKind', () => {
     expect(describeKind('index.tsx', 'text/plain')).toBe('TypeScript (JSX) File')
   })
 
+  it.each([
+    ['clip.webm', 'WebM Video'],
+    ['clip.mov', 'QuickTime Video'],
+    ['clip.m4v', 'M4V Video'],
+    ['clip.ogv', 'Ogg Video'],
+    ['song.m4a', 'M4A Audio'],
+    ['song.ogg', 'Ogg Audio'],
+    ['song.oga', 'Ogg Audio'],
+    ['song.flac', 'FLAC Audio'],
+    ['song.aac', 'AAC Audio'],
+  ])('labels the audio and video extension of %s', (name, label) => {
+    expect(describeKind(name, '')).toBe(label)
+  })
+
+  it('uses a generic audio or video label when the kind is known but the extension is not', () => {
+    expect(describeKind('track', 'audio/mpeg')).toBe('Audio File')
+    expect(describeKind('movie', 'video/mp4')).toBe('Video File')
+  })
+
   it('falls back to mime subtype when extension is unknown', () => {
     expect(describeKind('data.bin', 'application/octet-stream')).toBe('OCTET-STREAM (application)')
   })

@@ -80,6 +80,8 @@
   --scene-flower: #f08fb0;
   --scene-leaf-image: #f4a53d;
   --scene-leaf-pdf: #ee6b66;
+  --scene-leaf-audio: #4fa3e0;
+  --scene-leaf-video: #9b7fe0;
   --scene-leaf-other: #86d46c;
   --scene-leaf-folder: #3c9a62;
   --scene-ambient: 1;
@@ -132,6 +134,8 @@
     --scene-flower: #d77fa0;
     --scene-leaf-image: #ffb454;
     --scene-leaf-pdf: #ff7f7a;
+    --scene-leaf-audio: #6cb8f2;
+    --scene-leaf-video: #b399f5;
     --scene-leaf-other: #7be08c;
     --scene-leaf-folder: #3fc08a;
     --scene-ambient: 0.55;

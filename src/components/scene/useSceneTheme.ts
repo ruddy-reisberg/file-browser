@@ -16,6 +16,8 @@ const COLOR_TOKENS = {
   flower: '--scene-flower',
   leafImage: '--scene-leaf-image',
   leafPdf: '--scene-leaf-pdf',
+  leafAudio: '--scene-leaf-audio',
+  leafVideo: '--scene-leaf-video',
   leafOther: '--scene-leaf-other',
   leafFolder: '--scene-leaf-folder',
 } as const

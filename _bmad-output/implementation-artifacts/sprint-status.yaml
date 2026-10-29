@@ -29,14 +29,14 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-29-2026 15:06
-last_updated: 10-29-2026 15:06
+last_updated: 10-29-2026 15:19
 project: file-browser
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 development_status:
-  epic-1: backlog
-  1-1-one-classifier-decides-what-kind-of-file-it-is: backlog
+  epic-1: in-progress
+  1-1-one-classifier-decides-what-kind-of-file-it-is: review
   1-2-each-preview-manages-its-own-loading-and-errors: backlog
   1-3-the-3d-leaf-and-the-list-pane-show-the-same-selection: backlog
   1-4-play-an-audio-or-video-file-in-the-detail-pane: backlog

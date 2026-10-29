@@ -74,6 +74,9 @@ describe('leafCategory', () => {
   it('classifies images, pdfs and everything else', () => {
     expect(leafCategory(new File([''], 'a.png'))).toBe('image')
     expect(leafCategory(new File([''], 'a.PDF'))).toBe('pdf')
+    expect(leafCategory(new File([''], 'a.mp3'))).toBe('audio')
+    expect(leafCategory(new File([''], 'a.MP4'))).toBe('video')
+    expect(leafCategory(new File([''], 'main.ts', { type: 'video/mp2t' }))).toBe('other')
     expect(leafCategory(new File([''], 'a.txt'))).toBe('other')
     expect(leafCategory(undefined)).toBe('other')
   })

@@ -1,4 +1,16 @@
+import { classifyFile, extensionOf, type FileKind } from './file-kind'
 import type { FileMetadata } from './types'
+
+export { extensionOf }
+
+/** Generic label for a classified kind whose extension has no specific label above. */
+const GENERIC_LABEL_BY_KIND: Record<FileKind, string | undefined> = {
+  image: undefined,
+  pdf: undefined,
+  audio: 'Audio File',
+  video: 'Video File',
+  other: undefined,
+}
 
 const KIND_BY_EXTENSION: Record<string, string> = {
   png: 'PNG Image',
@@ -20,8 +32,17 @@ const KIND_BY_EXTENSION: Record<string, string> = {
   pdf: 'PDF Document',
   zip: 'ZIP Archive',
   mp4: 'MP4 Video',
+  webm: 'WebM Video',
+  mov: 'QuickTime Video',
+  m4v: 'M4V Video',
+  ogv: 'Ogg Video',
   mp3: 'MP3 Audio',
   wav: 'WAV Audio',
+  m4a: 'M4A Audio',
+  ogg: 'Ogg Audio',
+  oga: 'Ogg Audio',
+  flac: 'FLAC Audio',
+  aac: 'AAC Audio',
 }
 
 export function formatBytes(bytes: number): string {
@@ -45,15 +66,11 @@ export function formatDate(ms: number): string {
   })
 }
 
-export function extensionOf(name: string): string {
-  const dot = name.lastIndexOf('.')
-  if (dot <= 0 || dot === name.length - 1) return ''
-  return name.slice(dot + 1).toLowerCase()
-}
-
 export function describeKind(name: string, mimeType: string): string {
   const ext = extensionOf(name)
   if (ext && KIND_BY_EXTENSION[ext]) return KIND_BY_EXTENSION[ext]
+  const generic = GENERIC_LABEL_BY_KIND[classifyFile({ name, type: mimeType })]
+  if (generic) return generic
   if (mimeType) {
     const [type, subtype] = mimeType.split('/')
     if (type && subtype) return `${subtype.toUpperCase()} (${type})`

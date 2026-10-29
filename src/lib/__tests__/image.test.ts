@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isImageFile, parseExif } from '../image'
+import { isImageFile, isPdfFile, parseExif } from '../image'
 
 function makeFile(name: string, type: string): File {
   return new File(['x'], name, { type })
@@ -16,6 +16,21 @@ describe('isImageFile', () => {
 
   it('rejects non-image files', () => {
     expect(isImageFile(makeFile('notes.txt', 'text/plain'))).toBe(false)
+  })
+})
+
+describe('isPdfFile', () => {
+  it('detects PDFs by mime type', () => {
+    expect(isPdfFile(makeFile('doc.bin', 'application/pdf'))).toBe(true)
+  })
+
+  it('detects PDFs by extension when mime type is missing', () => {
+    expect(isPdfFile(makeFile('Report.PDF', ''))).toBe(true)
+  })
+
+  it('rejects non-PDF files', () => {
+    expect(isPdfFile(makeFile('notes.txt', 'text/plain'))).toBe(false)
+    expect(isPdfFile(makeFile('photo.png', 'image/png'))).toBe(false)
   })
 })
 
