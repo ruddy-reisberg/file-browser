@@ -42,7 +42,7 @@ development_status:
   1-4-play-an-audio-or-video-file-in-the-detail-pane: review
   1-5-playback-stops-cleanly-and-failures-are-explicit: review
   1-6-play-media-from-the-3d-leaf: review
-  1-7-confirm-native-controls-work-by-keyboard: backlog
+  1-7-confirm-native-controls-work-by-keyboard: review
   epic-1-retrospective: optional
 
   epic-2: backlog
