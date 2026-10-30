@@ -119,7 +119,7 @@ describe('PdfPreview', () => {
     expect(container.querySelector('img')).toBeNull()
   })
 
-  it('shows nothing and still destroys the document when the page fails to render', async () => {
+  it('shows the error and still destroys the document when the page fails to render', async () => {
     const destroy = vi.fn()
     const done = gate()
     mockDocument(done, destroy)
@@ -130,17 +130,63 @@ describe('PdfPreview', () => {
       done.reject(new Error('corrupt'))
     })
 
+    expect((await screen.findByText('corrupt')).className).toBe('detail-pane__error')
     expect(screen.queryByRole('img')).toBeNull()
     expect(destroy).toHaveBeenCalledTimes(1)
   })
 
-  it('shows nothing when the document cannot be opened', async () => {
+  it('shows the error when the document cannot be opened', async () => {
     pdf.getDocument.mockReturnValueOnce({ promise: Promise.reject(new Error('encrypted')) })
 
     render(<PdfPreview file={pdfFile('a.pdf')} />)
-    await waitFor(() => expect(pdf.getDocument).toHaveBeenCalledTimes(1))
-    await act(async () => {})
 
+    expect((await screen.findByText('encrypted')).className).toBe('detail-pane__error')
     expect(screen.queryByRole('img')).toBeNull()
+  })
+
+  it('falls back to a generic message when the failure is not an Error', async () => {
+    pdf.getDocument.mockReturnValueOnce({ promise: Promise.reject('nope') })
+
+    render(<PdfPreview file={pdfFile('a.pdf')} />)
+
+    expect(await screen.findByText('Could not render PDF.')).toBeTruthy()
+  })
+
+  it('shows no error from a previous file that fails after the selection changed', async () => {
+    const first = gate()
+    const second = gate()
+    const destroyFirst = vi.fn()
+    mockDocument(first, destroyFirst)
+    mockDocument(second, vi.fn())
+
+    const { rerender } = render(<PdfPreview file={pdfFile('a.pdf')} />)
+    rerender(<PdfPreview file={pdfFile('b.pdf')} />)
+    await waitFor(() => expect(canvasCount).toBe(2))
+
+    await act(async () => {
+      first.reject(new Error('old failure'))
+    })
+    expect(screen.queryByText('old failure')).toBeNull()
+    expect(destroyFirst).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      second.resolve()
+    })
+    expect((await screen.findByRole('img')).getAttribute('src')).toBe('data:image/png;base64,render-2')
+  })
+
+  it('clears the error when the file changes to a valid PDF', async () => {
+    pdf.getDocument.mockReturnValueOnce({ promise: Promise.reject(new Error('corrupt')) })
+    const done = gate()
+    mockDocument(done, vi.fn())
+    done.resolve()
+
+    const { rerender } = render(<PdfPreview file={pdfFile('a.pdf')} />)
+    await screen.findByText('corrupt')
+
+    rerender(<PdfPreview file={pdfFile('b.pdf')} />)
+
+    expect(await screen.findByRole('img')).toBeTruthy()
+    expect(screen.queryByText('corrupt')).toBeNull()
   })
 })

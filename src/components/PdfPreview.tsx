@@ -28,21 +28,27 @@ async function renderPdfFirstPage(file: File): Promise<string> {
 
 export default function PdfPreview({ file }: Props) {
   const [url, setUrl] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setUrl(null)
+    setError(null)
     let cancelled = false
     renderPdfFirstPage(file).then(
       (dataUrl) => {
         if (!cancelled) setUrl(dataUrl)
       },
-      () => {},
+      (err) => {
+        if (cancelled) return
+        setError(err instanceof Error ? err.message : 'Could not render PDF.')
+      },
     )
     return () => {
       cancelled = true
     }
   }, [file])
 
+  if (error) return <p className="detail-pane__error">{error}</p>
   if (!url) return null
 
   return (
