@@ -107,7 +107,7 @@ export default function App() {
                 {(visibleRoot.children?.length ?? 0) === 0 && query.trim() !== '' ? (
                   <p className="app__placeholder">No file or folder matches this filter.</p>
                 ) : (
-                  <Tree root={visibleRoot} selectedPath={selected?.path ?? null} onSelect={setSelected} />
+                  <Tree key={pickCount} root={visibleRoot} selectedPath={selected?.path ?? null} onSelect={setSelected} />
                 )}
               </>
             ) : (

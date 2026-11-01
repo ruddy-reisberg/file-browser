@@ -71,6 +71,46 @@ describe('App filter', () => {
   })
 })
 
+describe('App new pick in the list view', () => {
+  beforeEach(() => {
+    vi.mocked(pickDirectory).mockReset()
+  })
+
+  function pickNested() {
+    vi.mocked(pickDirectory).mockResolvedValue({
+      rootName: 'root',
+      entries: [entry(['docs', 'deep', 'a.txt']), entry(['readme.md'])],
+    })
+    fireEvent.click(screen.getByRole('button', { name: /choose folder/i }))
+  }
+
+  it('collapses a nested folder that exists in both picks', async () => {
+    render(<App />)
+    pickNested()
+    fireEvent.click(await screen.findByText('deep'))
+    expect(screen.getByText('a.txt')).toBeTruthy()
+
+    pickNested()
+    await waitFor(() => expect(screen.queryByText('a.txt')).toBeNull())
+    expect(screen.getByText('deep').closest('li')).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('clears the selection', async () => {
+    render(<App />)
+    pickNested()
+    fireEvent.click(await screen.findByText('readme.md'))
+    expect(screen.getByRole('region', { name: 'File details' })).toHaveTextContent('readme.md')
+
+    pickNested()
+    await waitFor(() =>
+      expect(screen.getByRole('region', { name: 'File details' })).toHaveTextContent(
+        'Select a file or folder to see its details.',
+      ),
+    )
+    expect(screen.getByText('readme.md').closest('li')).toHaveAttribute('aria-selected', 'false')
+  })
+})
+
 describe('App selection across views', () => {
   beforeEach(() => {
     vi.mocked(pickDirectory).mockReset()
