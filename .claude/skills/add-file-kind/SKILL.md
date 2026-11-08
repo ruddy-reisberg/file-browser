@@ -1,6 +1,7 @@
 ---
 name: add-file-kind
 description: Add a new file kind (e.g. text, archive, 3d-model) end to end in the file-browser: classifier in src/lib/file-kind.ts, metadata label, preview component, DetailPane wiring, 3D leaf color token, tests, and a green `npm run check`. Use for "add support for <kind> files", "new file kind", "preview <type> files". Argument = the kind name and the extensions/MIME types it covers.
+disable-model-invocation: true
 ---
 
 # Add a file kind end to end

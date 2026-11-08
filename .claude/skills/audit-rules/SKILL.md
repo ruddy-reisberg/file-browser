@@ -1,6 +1,6 @@
 ---
 name: audit-rules
-description: Audit the whole file-browser codebase (not just a diff) against the project rules in CLAUDE.md, src/lib/CLAUDE.md and .claude/rules/. Greps every Forbidden item (React in lib, network, persistence, folder writes, hardcoded design values, check-silencing escapes), then verifies conventions (object URL pairing, async cancellation, 3D disposal, keys, a11y, tests per module). Use for "audit the project", "are we compliant with the rules", "rules audit". For a diff review use `review` instead.
+description: Audit the whole file-browser codebase (not just a diff) against the project rules in CLAUDE.md, src/lib/CLAUDE.md and .claude/rules/. Greps every Forbidden item (React in lib, network, persistence, folder writes, hardcoded design values, check-silencing escapes), then verifies conventions (object URL pairing, async cancellation, 3D disposal, keys, a11y, tests per module). Use for "audit the project", "are we compliant with the rules", "rules audit".
 ---
 
 # file-browser rules audit
