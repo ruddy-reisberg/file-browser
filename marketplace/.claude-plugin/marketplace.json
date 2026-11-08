@@ -1,0 +1,16 @@
+{
+  "name": "file-browser-marketplace",
+  "owner": {
+    "name": "Ruddy Reisberg"
+  },
+  "metadata": {
+    "description": "Local marketplace for the file-browser project tooling"
+  },
+  "plugins": [
+    {
+      "name": "file-browser-tools",
+      "source": "./plugins/file-browser-tools",
+      "description": "lib-test command and audit-rules skill for the file-browser project"
+    }
+  ]
+}

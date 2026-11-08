@@ -1,0 +1,9 @@
+{
+  "name": "file-browser-tools",
+  "version": "1.0.0",
+  "description": "Close test gaps on src/lib exports (/lib-test) and audit the codebase against the project rules (audit-rules skill).",
+  "author": {
+    "name": "Ruddy Reisberg"
+  },
+  "license": "UNLICENSED"
+}
