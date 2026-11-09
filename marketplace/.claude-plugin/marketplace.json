@@ -11,6 +11,11 @@
       "name": "file-browser-tools",
       "source": "./plugins/file-browser-tools",
       "description": "lib-test command and audit-rules skill for the file-browser project"
+    },
+    {
+      "name": "file-viewer",
+      "source": "./plugins/file-viewer",
+      "description": "/files mod: read-only pane with the project file tree and a highlighted text preview"
     }
   ]
 }
